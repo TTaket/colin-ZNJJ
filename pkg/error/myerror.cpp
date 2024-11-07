@@ -42,3 +42,5 @@ void sys_show_error() {
     printf("%s\n", errlist[i].errBuf);
   }
 }
+
+void sys_error_clear() { errlistcnt = 0; }

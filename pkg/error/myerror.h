@@ -4,7 +4,7 @@
 #define ERROR_BUF_SIZE 1024
 #define ERROR_LIST_SIZE 1024
 
-#define ERROR_SYSINFO std::string("file:"+std::string(__FILE__)+" function:"+std::string(__FUNCTION__)+" line:"+std::to_string(__LINE__)).c_str()
+#define ERROR_SYSINFO std::string(std::string(__FILE__)+":"+std::string(__FUNCTION__)+":"+std::to_string(__LINE__)).c_str()
 
 #define ERROR_INFO_ADD(str) sys_add_error(ERROR_SYSINFO , strlen(ERROR_SYSINFO) , str , strlen(str))
 #define ERROR_INFO_ERRNO_ADD(str) sys_add_error_errno(ERROR_SYSINFO , strlen(ERROR_SYSINFO) , str , strlen(str) , errno)
@@ -18,4 +18,5 @@ void sys_add_error(const char* sys , const int syslen, const char *err , const i
 void sys_add_error_errno(const char* sys ,const int syslen, const char *err , const int len , int errnum);
 void sys_add_error_errnoandsock(const char* sys ,const int syslen, const char *err , const int len , int errnum , SOCKNODE *node);
 void sys_show_error();
+void sys_error_clear();
 //添加到本地文件操作
