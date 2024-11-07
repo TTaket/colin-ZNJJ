@@ -1,21 +1,25 @@
 CC = g++
 CFLAGS = -Wall -O2
 BIN_DIR = bin
-SRC_DIRS = server client
-SRCS = $(wildcard server/*.cpp) $(wildcard client/*.cpp)
+SRC_SERVER = server/server.cpp
+SRC_CLIENT = client/client.cpp
+
+SRC_PKG_DIRS = pkg/net pkg/error
+SRCS_PKG = $(foreach dir, $(SRC_PKG_DIRS), $(wildcard $(dir)/*.cpp))
+
 OBJS = $(SRCS:.cpp=.o)
 TARGETS = $(BIN_DIR)/server $(BIN_DIR)/client
-INCLUDES = -Ibase
+INCLUDES = -Ibase -Ipkg/error -Ipkg/net
 
 all: $(TARGETS)
 
-$(BIN_DIR)/server: server/server.cpp $(wildcard base/*.h)
+$(BIN_DIR)/server: $(SRC_SERVER) $(SRCS_PKG)
 	@mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $<
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ 
 
-$(BIN_DIR)/client: client/client.cpp $(wildcard base/*.h)
+$(BIN_DIR)/client: $(SRC_CLIENT) $(SRCS_PKG)
 	@mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $<
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $^ 
 
 clean:
 	rm -rf $(BIN_DIR) $(OBJS)
