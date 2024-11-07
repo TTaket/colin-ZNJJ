@@ -3,6 +3,16 @@
 #include <cstdio>
 #include <unistd.h>
  
+int sendInfo(int connfd, char * sInfo , int sLen){
+    int bytes_sent = send(connfd, sInfo, sLen, 0);
+    if (bytes_sent == -1) {
+        perror("send failed");
+        return -1;
+    }
+    return 0;
+}
+
+
 int main(){
 
     // 创建socket
