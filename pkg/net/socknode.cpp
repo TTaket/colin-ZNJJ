@@ -1,6 +1,7 @@
 #include "../../header/stdhead.h"
 #include "../error/myerror.h"
 #include "./socknode.h"
+#include <cstdio>
 #include <cstring>
 
 //获取发送缓冲区大小
@@ -157,7 +158,20 @@ int recvMsg(SOCKNODE *node, char *buf, int len){
     }
     return 0;
 }
-
+//清空缓冲区
+int clearBuf(SOCKNODE *node){
+    node->sendHead = node->sendTail = 0;
+    node->recvHead = node->recvTail = 0;
+    return 0;
+}
+int clearSendBuf(SOCKNODE *node){
+    node->sendHead = node->sendTail = 0;
+    return 0;
+}
+int clearRecvBuf(SOCKNODE *node){
+    node->sendHead = node->sendTail = 0;
+    return 0;
+}
 //创建套接字
 SOCKNODE * createSocket( char* name , int namelen){
     SOCKNODE *node = new SOCKNODE();

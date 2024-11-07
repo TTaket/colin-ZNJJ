@@ -13,20 +13,10 @@ int main(){
 
     // 收发数据
     char strRecv[100] = {};
-    char strRecv2[100] = {};
-    putSendBuf(newnode, "welcome to server!", strlen("welcome to server!"));
-    putSendBuf(newnode, newnode->ip, strlen(newnode->ip));
-    putSendBuf(newnode, std::to_string(newnode->port).c_str(), std::to_string(newnode->port).size());
-    doSend(newnode);
-    
+    sendMsg(newnode, std::string("welcome to server!" + std::string(newnode->ip)).c_str(), strlen("welcome to server!") + std::string(newnode->ip).length() );
     recvMsg(newnode, strRecv);
     printf("%s\n" , strRecv);
-    recvMsg(newnode, strRecv2);
-    printf("%s\n" , strRecv2);
-
-    ERROR_INFO_ERRNO_SOCKNODE_ADD("nihao" , node);
-    ERROR_INFO_ERRNO_SOCKNODE_ADD("nihao" , newnode);
-    sys_show_error();
+    
     // 关闭
     closeSocket(newnode);
     closeSocket(node);

@@ -231,3 +231,8 @@ int sendMsg(SOCKNODE *node,const char *buf, int len = -1);
  * @return int 返回实际取出接收缓冲区的数据长度，单位为字节。
  */
 int recvMsg(SOCKNODE *node, char *buf, int len= -1);
+
+//清空缓冲区
+int clearBuf(SOCKNODE *node);
+int clearSendBuf(SOCKNODE *node);
+int clearRecvBuf(SOCKNODE *node);
