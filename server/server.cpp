@@ -1,5 +1,6 @@
-#include "net/base/stdhead.h"
-#include "net/base/protocol.h"
+#include "../base/stdhead.h"
+#include "../base/protocol.h"
+#include <cstdio>
 #include <unistd.h>
  
 int main(){
@@ -16,25 +17,43 @@ int main(){
     if(ret == -1){
         printf("bind error\n");
         return -1;
+    }else{
+        printf("bind successful\n");
     }
-    listen(socfd, 5);
+    
+    if (listen(socfd, 5) == -1) {
+        printf("listen error\n");
+        return -1;
+    }else{
+        printf("listen successful\n");
+    }
 
     // 接受连接
     struct sockaddr_in addr_cli;
     socklen_t len = sizeof(addr_cli);
     int connfd = accept(socfd, (struct sockaddr*)&addr_cli, &len);
+    if(connfd == -1) {
+        printf("connfd error\n");
+        return -1;
+    }else{
+        printf("connfd successful\n");
+    }
 
-    // 发送数据
-    std::string strSend ="welcome to server!";
+    // 收发数据
     char strRecv[100] = {};
-    strSend.append(std::to_string(addr_cli.sin_addr.s_addr));
+    std::string strSend ="welcome to server!";
+    std::string client_ip = inet_ntoa(addr_cli.sin_addr);
+    strSend.append(client_ip);
     send(connfd, strSend.c_str(), strSend.size(), 0);
-    recv(connfd, strRecv, 100, 0);
+    int bytesReceived = recv(connfd, strRecv, 100, 0);
+    if (bytesReceived <= 0) {
+        printf("recv failed or connection closed\n");
+        return -1;
+    }
     printf("recv: %s\n", strRecv);
 
-    // 回收资源
+    // 关闭
     close(connfd);
     close(socfd);
-
     return 0;
 }

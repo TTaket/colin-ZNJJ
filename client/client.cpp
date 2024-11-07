@@ -1,5 +1,6 @@
-#include "net/base/stdhead.h"
-#include "net/base/protocol.h"
+#include "../base/stdhead.h"
+#include "../base/protocol.h"
+#include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -7,15 +8,20 @@ int main(){
 
     // 创建socket
     int socfd = socket(AF_INET, SOCK_STREAM, 0);
-    listen(socfd, 5);
 
     // 建立连接
     struct sockaddr_in addr_ser;
     addr_ser.sin_addr.s_addr = inet_addr(SERVER_IP);
     addr_ser.sin_family = AF_INET;
-    addr_ser.sin_port = htons(12345);
-    int connfd = connect(socfd, (sockaddr * )&addr_ser, sizeof(addr_ser));
-    
+    addr_ser.sin_port = htons(SERVER_PORT);
+    int ret = connect(socfd, (sockaddr * )&addr_ser, sizeof(addr_ser));
+    if(ret == -1) {
+        printf("connfd error\n");
+        return -1;
+    }else{
+        printf("connfd successful\n");
+    }
+
     // 获取自己的信息
     struct sockaddr_in addr_cli;
     socklen_t addr_len = sizeof(addr_ser);
@@ -23,15 +29,18 @@ int main(){
 
     // 发送数据
     std::string strSend ="Hello I am client!";
-    char strRecv[100];
-    recv(connfd, strRecv, 100, 0);
+    std::string client_ip = inet_ntoa(addr_cli.sin_addr);
+    strSend.append(client_ip);
+    char strRecv[100] ={};
+    int bytesReceived = recv(socfd, strRecv, 100, 0);
+    if(bytesReceived <= 0) {
+        printf("recv failed or connection closed\n");
+        return -1;
+    }
     printf("recv: %s\n", strRecv);
+    send(socfd, strSend.c_str(), strSend.size(), 0);
 
-    strSend.append(std::to_string(addr_cli.sin_addr.s_addr));
-    send(connfd, strSend.c_str(), strSend.size(), 0);
-
-    close(connfd);
+    // 关闭
     close(socfd);
-
     return 0;
 }
