@@ -36,7 +36,7 @@ void sys_add_error_errnoandsock(const char *sys, const int syslen,
   errlistcnt++;
 }
 
-void show_error() {
+void sys_show_error() {
   int len = errlistcnt;
   for (int i = 0; i < len; i++) {
     printf("%s\n", errlist[i].errBuf);

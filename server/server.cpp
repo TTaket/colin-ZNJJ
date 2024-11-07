@@ -1,69 +1,34 @@
-#include "../base/stdhead.h"
-#include "../base/protocol.h"
-#include <cstdio>
-#include <unistd.h>
- 
-int sendInfo(int connfd, char * sInfo , int sLen){
-    int bytes_sent = send(connfd, sInfo, sLen, 0);
-    if (bytes_sent == -1) {
-        perror("send failed");
-        return -1;
-    }
-    return 0;
-}
-
+#include "../header/stdhead.h"
+#include "../header/protocol.h"
+#include "../pkg/error/myerror.h"
+#include "../pkg/net/socknode.h"
+#include <string>
 
 int main(){
-
-    // 创建socket
-    int socfd = socket(AF_INET, SOCK_STREAM, 0);
-    
-    // 绑定 & 监听
-    struct sockaddr_in addr_ser;
-    addr_ser.sin_addr.s_addr = INADDR_ANY;
-    addr_ser.sin_family = AF_INET;
-    addr_ser.sin_port = htons(SERVER_PORT);
-    int ret = bind(socfd , (struct sockaddr*)&addr_ser , sizeof(addr_ser));
-    if(ret == -1){
-        printf("bind error\n");
-        return -1;
-    }else{
-        printf("bind successful\n");
-    }
-    
-    if (listen(socfd, 5) == -1) {
-        printf("listen error\n");
-        return -1;
-    }else{
-        printf("listen successful\n");
-    }
-
-    // 接受连接
-    struct sockaddr_in addr_cli;
-    socklen_t len = sizeof(addr_cli);
-    int connfd = accept(socfd, (struct sockaddr*)&addr_cli, &len);
-    if(connfd == -1) {
-        printf("connfd error\n");
-        return -1;
-    }else{
-        printf("connfd successful\n");
-    }
+    SOCKNODE * node = createSocket("li",strlen("li"));
+    bindListen(node , 8159);
+    SOCKNODE * newnode = acceptConn(node ,"zi" , strlen("zi"));
+    FullSocketInfo(node);
+    FullSocketInfo(newnode);
 
     // 收发数据
     char strRecv[100] = {};
-    std::string strSend ="welcome to server!";
-    std::string client_ip = inet_ntoa(addr_cli.sin_addr);
-    strSend.append(client_ip);
-    send(connfd, strSend.c_str(), strSend.size(), 0);
-    int bytesReceived = recv(connfd, strRecv, 100, 0);
-    if (bytesReceived <= 0) {
-        printf("recv failed or connection closed\n");
-        return -1;
-    }
-    printf("recv: %s\n", strRecv);
+    char strRecv2[100] = {};
+    putSendBuf(newnode, "welcome to server!", strlen("welcome to server!"));
+    putSendBuf(newnode, newnode->ip, strlen(newnode->ip));
+    putSendBuf(newnode, std::to_string(newnode->port).c_str(), std::to_string(newnode->port).size());
+    doSend(newnode);
+    
+    recvMsg(newnode, strRecv);
+    printf("%s\n" , strRecv);
+    recvMsg(newnode, strRecv2);
+    printf("%s\n" , strRecv2);
 
+    ERROR_INFO_ERRNO_SOCKNODE_ADD("nihao" , node);
+    ERROR_INFO_ERRNO_SOCKNODE_ADD("nihao" , newnode);
+    sys_show_error();
     // 关闭
-    close(connfd);
-    close(socfd);
+    closeSocket(newnode);
+    closeSocket(node);
     return 0;
 }

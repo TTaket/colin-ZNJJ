@@ -1,4 +1,4 @@
-#include "../../base/stdhead.h"
+#include "../../header/stdhead.h"
 #include "../error/myerror.h"
 #include "./socknode.h"
 #include <cstring>
@@ -28,7 +28,7 @@ int getRecvBufRemain(SOCKNODE *node){
     return RECV_BUF_SIZE - getRecvBufSize(node) - 1;//-1是为了区分满和空
 }
 //数据放入到发送缓冲区
-int putSendBuf(SOCKNODE *node, char *buf, int len){
+int putSendBuf(SOCKNODE *node, const char *buf, int len){
     int len1 = getSendBufSize(node);
     if(getSendBufRemain(node) < len){
         ERROR_INFO_ADD("send buffer is full");
@@ -51,7 +51,7 @@ int putSendBuf(SOCKNODE *node, char *buf, int len){
     return len2 - len1;
 }
 //数据放入到接收缓冲区
-int putRecvBuf(SOCKNODE *node, char *buf, int len){
+int putRecvBuf(SOCKNODE *node, const char *buf, int len){
     int len1 = getRecvBufSize(node);
     if(getRecvBufRemain(node) < len){
         return -1;//缓冲区满
@@ -140,7 +140,7 @@ int doRecv(SOCKNODE *node , int rlen){
 }
 
 //发送数据 放入缓冲区并发送
-int sendMsg(SOCKNODE *node, char *buf, int len){
+int sendMsg(SOCKNODE *node,const char *buf, int len ){
     if(putSendBuf(node, buf, len) == -1){
         return -1;
     }
@@ -196,6 +196,7 @@ int FullSocketInfo(SOCKNODE *node){
 
     //初始化 addr
     if(node->addr_len == -1){
+        node->addr_len = sizeof(node->addr);
         int ret = getsockname(node->connfd, (struct sockaddr *)&node->addr, &node->addr_len);
         if(ret == -1){
             ERROR_INFO_ERRNO_ADD("getsockname error");
@@ -267,7 +268,7 @@ SOCKNODE * acceptConn(SOCKNODE *node , char *name, int namelen){
 }
 
 //关闭连接
-int closeConn(SOCKNODE *node){
+int closeSocket(SOCKNODE *node){
     node->connfd = -1;
     node->sendHead = node->sendTail = 0;
     node->recvHead = node->recvTail = 0;

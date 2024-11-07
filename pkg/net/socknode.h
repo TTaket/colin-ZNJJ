@@ -1,5 +1,5 @@
 #pragma once
-#include "../../base/stdhead.h"
+#include "../../header/stdhead.h"
 
 #define SEND_BUF_SIZE 1024
 #define RECV_BUF_SIZE 1024
@@ -60,7 +60,7 @@ int FullSocketInfo(SOCKNODE *node);
  * 
  * @note 使用此函数可以建立与指定服务器的连接，适用于需要网络通信的场景。
  */
-int createConn(SOCKNODE *node, const char *ip, int port);
+int ConnSocket(SOCKNODE *node, const char *ip, int port);
 
 /**
  * @brief 绑定监听
@@ -81,7 +81,7 @@ int bindListen(SOCKNODE *node, int port);
  * @param node 指向SOCKNODE结构体的指针，表示需要操作的节点。
  * @return SOCKNODE* 返回指向新接受的连接的SOCKNODE节点的指针。
  */
-SOCKNODE * acceptConn(SOCKNODE *node);
+SOCKNODE * acceptConn(SOCKNODE *node , char *name, int namelen);
 
 /**
  * @brief 关闭连接
@@ -91,7 +91,7 @@ SOCKNODE * acceptConn(SOCKNODE *node);
  * @param node 指向SOCKNODE结构体的指针，表示需要操作的节点。
  * @return int 返回0表示成功，返回负值表示失败。
  */
-int closeConn(SOCKNODE *node);
+int closeSocket(SOCKNODE *node);
 
 
 
@@ -147,7 +147,7 @@ int getRecvBufRemain(SOCKNODE *node);
  * @note 该函数将数据放入发送缓冲区，如果缓冲区剩余空间不足以容纳数据，则返回-1。
  *       如果数据可以放入缓冲区，则将数据复制到缓冲区相应位置，并更新发送缓冲区的尾部指针。
  */
-int putSendBuf(SOCKNODE *node, char *buf, int len);
+int putSendBuf(SOCKNODE *node,const char *buf, int len);
 
 /**
  * @brief 将接收到的数据放入接收缓冲区
@@ -160,7 +160,7 @@ int putSendBuf(SOCKNODE *node, char *buf, int len);
  * @param len 接收到的数据长度
  * @return int 实际放入的长度，失败返回-1（缓冲区满）
  */
-int putRecvBuf(SOCKNODE *node, char *buf, int len);
+int putRecvBuf(SOCKNODE *node,const char *buf, int len);
 
 /**
  * @brief 从发送缓冲区取出数据
@@ -218,7 +218,7 @@ int doRecv(SOCKNODE *node , int rlen = -1);
  * @param len 需要发送的数据长度。
  * @return int 返回实际发送的数据长度，单位为字节。
  */
-int sendMsg(SOCKNODE *node, char *buf, int len);
+int sendMsg(SOCKNODE *node,const char *buf, int len = -1);
 
 /**
  * @brief 接收数据 刷新缓冲区数据 并且从缓冲区取出
@@ -230,4 +230,4 @@ int sendMsg(SOCKNODE *node, char *buf, int len);
  * @param len 需要取出的数据长度。
  * @return int 返回实际取出接收缓冲区的数据长度，单位为字节。
  */
-int recvMsg(SOCKNODE *node, char *buf, int len);
+int recvMsg(SOCKNODE *node, char *buf, int len= -1);
