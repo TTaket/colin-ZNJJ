@@ -44,3 +44,5 @@ void sys_show_error() {
 }
 
 void sys_error_clear() { errlistcnt = 0; }
+
+int sys_error_size() { return errlistcnt; }

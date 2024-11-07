@@ -3,6 +3,7 @@
 #include "./socknode.h"
 #include <cstdio>
 #include <cstring>
+#include <algorithm>
 
 //获取发送缓冲区大小
 int getSendBufSize(SOCKNODE *node){
@@ -30,10 +31,10 @@ int getRecvBufRemain(SOCKNODE *node){
 }
 //数据放入到发送缓冲区
 int putSendBuf(SOCKNODE *node, const char *buf, int len){
-    int len1 = getSendBufSize(node);
+    int lenbefore = getSendBufSize(node);
     if(getSendBufRemain(node) < len){
         ERROR_INFO_ADD("send buffer is full");
-        return -1;//缓冲区满
+        return getSendBufRemain(node);//缓冲区满
     }
     if(node->sendTail + len < SEND_BUF_SIZE){
         memcpy(node->sendBuf + node->sendTail, buf, len);
@@ -48,14 +49,14 @@ int putSendBuf(SOCKNODE *node, const char *buf, int len){
         memcpy(node->sendBuf + SEND_BUF_SIZE, buf + len1, len2);
         node->sendTail = len2;
     }
-    int len2 = getSendBufSize(node);
-    return len2 - len1;
+    int lenafter = getSendBufSize(node);
+    return lenafter - lenbefore;
 }
 //数据放入到接收缓冲区
 int putRecvBuf(SOCKNODE *node, const char *buf, int len){
-    int len1 = getRecvBufSize(node);
+    int lenbefore = getRecvBufSize(node);
     if(getRecvBufRemain(node) < len){
-        return -1;//缓冲区满
+        return getRecvBufRemain(node);//缓冲区满
     }
     if(node->recvTail + len < RECV_BUF_SIZE){
         memcpy(node->recvBuf + node->recvTail, buf, len);
@@ -70,17 +71,17 @@ int putRecvBuf(SOCKNODE *node, const char *buf, int len){
         memcpy(node->recvBuf + RECV_BUF_SIZE, buf + len1, len2);
         node->recvTail = len2;
     }
-    int len2 = getRecvBufSize(node);
-    return len2 - len1;
+    int lenafter = getRecvBufSize(node);
+    return lenafter - lenbefore;
 }
 //从发送缓冲区取出数据
 int getSendBuf(SOCKNODE *node, char *buf, int len){
-    int len1 = getSendBufRemain(node);
+    int lenbefore = getSendBufRemain(node);
     if(len == -1){
         len = getSendBufSize(node);
     }
     if(getSendBufSize(node) < len){
-        return -1;//缓冲区数据不足
+        len = getSendBufSize(node);//缓冲区数据不足
     }
     if(node->sendHead + len < SEND_BUF_SIZE){
         memcpy(buf, node->sendBuf + node->sendHead, len);
@@ -92,17 +93,17 @@ int getSendBuf(SOCKNODE *node, char *buf, int len){
         memcpy(buf + len1, node->sendBuf, len2);
         node->sendHead = len2;
     }
-    int len2 = getSendBufRemain(node);
-    return len1 - len2;
+    int lenafter = getSendBufRemain(node);
+    return lenafter - lenbefore;
 }
 //从接收缓冲区取出数据
 int getRecvBuf(SOCKNODE *node, char *buf, int len){
-    int len1 = getRecvBufRemain(node);
+    int lenbefore = getRecvBufRemain(node);
     if(len == -1){
         len = getRecvBufSize(node);
     }
     if(getRecvBufSize(node) < len){
-        return -1;//缓冲区数据不足
+        len = getRecvBufSize(node);
     }
     if(node->recvHead + len < RECV_BUF_SIZE){
         memcpy(buf, node->recvBuf + node->recvHead, len);
@@ -114,8 +115,8 @@ int getRecvBuf(SOCKNODE *node, char *buf, int len){
         memcpy(buf + len1, node->recvBuf, len2);
         node->recvHead = len2;
     }
-    int len2 = getRecvBufRemain(node);
-    return len1 - len2;
+    int lenafter = getRecvBufRemain(node);
+    return lenafter - lenbefore;
 }
 
 //执行发送
@@ -126,6 +127,10 @@ int doSend(SOCKNODE *node , int slen){
     getSendBuf(node, buf, len);
     buf[len] = '\0';
     int ret = send(node->connfd, buf, len, 0);
+    if(ret == -1){
+        ERROR_INFO_ERRNO_SOCKNODE_ADD("send error", node);
+        return -1;
+    }
     return ret;
 }
 
@@ -135,28 +140,34 @@ int doRecv(SOCKNODE *node , int rlen){
     if(len == 0) return 0;
     char buf[RECV_BUF_SIZE]={};//这里的空间可以优化 现在有太多拷贝
     int ret = recv(node->connfd, buf, len, 0);
-    if(ret <= 0) return -1;
-    putRecvBuf(node, buf, ret);
-    return 0;
+    if(ret == -1) return -1;
+    return putRecvBuf(node, buf, ret);
 }
 
 //发送数据 放入缓冲区并发送
 int sendMsg(SOCKNODE *node,const char *buf, int len ){
-    if(putSendBuf(node, buf, len) == -1){
+    int sendlen = (len == -1) ? strlen(buf) : len;
+    sendlen = std::min(sendlen , (int)strlen(buf));
+    sendlen = putSendBuf(node, buf, sendlen);
+    if(sendlen == -1){
         return -1;
     }
-    return doSend(node);
+    return doSend(node , sendlen);
 }
 
 //接收数据 刷新缓冲区数据 并且从缓冲区取出
 int recvMsg(SOCKNODE *node, char *buf, int len){
-    if(doRecv(node) == -1){
+    int recvlen = (len == -1) ? getRecvBufRemain(node) : len;
+    recvlen = std::min(recvlen , getRecvBufRemain(node));
+    recvlen = doRecv(node , recvlen);
+    if( recvlen == -1){
         return -1;
     }
-    if(getRecvBuf(node, buf, len) == -1){
+    recvlen = getRecvBuf(node, buf, recvlen);
+    if(recvlen == -1){
         return -1;
     }
-    return 0;
+    return recvlen;
 }
 //清空缓冲区
 int clearBuf(SOCKNODE *node){
