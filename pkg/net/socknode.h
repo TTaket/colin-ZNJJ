@@ -8,16 +8,9 @@ typedef struct SOCKNODE{
     struct sockaddr_in addr;
     socklen_t addr_len;
 
-    //环形队列 这里2倍的长度是可以避免数据拷贝 （stringview）但是还没有使用
-    char sendBuf[2 * SEND_BUF_SIZE];
-    char recvBuf[2 * RECV_BUF_SIZE];
-    int sendHead, sendTail;
-    int recvHead, recvTail;
     SOCKNODE(){
         connfd = -1;
         addr_len = -1;//未初始化
-        sendHead = sendTail = 0;
-        recvHead = recvTail = 0;
     }
 
     // 详细信息
@@ -97,142 +90,32 @@ int closeSocket(SOCKNODE *node);
 
 /***************套接字读写操作**************************/
 /**
- * @brief 获取指定SOCKNODE的发送缓冲区大小。
- *
- * 该函数用于获取指定SOCKNODE对象的发送缓冲区大小。
- *
- * @param node 指向SOCKNODE对象的指针。
- * @return 返回发送缓冲区的大小（以字节为单位）。
- */
-int getSendBufSize(SOCKNODE *node);
-
-/**
- * @brief 获取接收缓冲区的大小。
- *
- * 该函数用于获取指定SOCKNODE节点的接收缓冲区大小。
- *
- * @param node 指向SOCKNODE结构体的指针。
- * @return 返回接收缓冲区的大小（以字节为单位）。
- */
-int getRecvBufSize(SOCKNODE *node);
-
-/**
- * @brief 获取发送缓冲区剩余空间
- * 
- * 该函数用于获取指定SOCKNODE节点的发送缓冲区中剩余的空间大小。
- * 
- * @param node 指向SOCKNODE结构体的指针，表示需要查询的节点。
- * @return int 返回发送缓冲区的剩余空间大小，单位为字节。
- */
-int getSendBufRemain(SOCKNODE *node);
-
-/**
- * @brief 获取接收缓冲区剩余空间
- * 
- * 该函数用于获取指定SOCKNODE节点的接收缓冲区中剩余的空间大小。
- * 
- * @param node 指向SOCKNODE结构体的指针，表示需要查询的节点。
- * @return int 返回接收缓冲区的剩余空间大小，单位为字节。
- */
-int getRecvBufRemain(SOCKNODE *node);
-
-/**
- * @brief 将数据放入发送缓冲区
- * 
- * @param node 指向SOCKNODE结构体的指针，表示当前的连接节点
- * @param buf 指向要发送的数据缓冲区的指针
- * @param len 要发送的数据长度
- * @return int 实际放入的长度，失败返回-1（缓冲区满）
- * 
- * @note 该函数将数据放入发送缓冲区，如果缓冲区剩余空间不足以容纳数据，则返回-1。
- *       如果数据可以放入缓冲区，则将数据复制到缓冲区相应位置，并更新发送缓冲区的尾部指针。
- */
-int putSendBuf(SOCKNODE *node,const char *buf, int len);
-
-/**
- * @brief 将接收到的数据放入接收缓冲区
- *
- * 该函数用于将接收到的数据放入指定的SOCKNODE节点的接收缓冲区中。
- * 如果缓冲区剩余空间不足以容纳新数据，则返回错误。
- *
- * @param node 指向SOCKNODE结构体的指针，表示目标节点
- * @param buf 指向接收到的数据缓冲区的指针
- * @param len 接收到的数据长度
- * @return int 实际放入的长度，失败返回-1（缓冲区满）
- */
-int putRecvBuf(SOCKNODE *node,const char *buf, int len);
-
-/**
- * @brief 从发送缓冲区取出数据
- * 
- * 该函数用于从指定SOCKNODE节点的发送缓冲区中取出数据。
- * 
- * @param node 指向SOCKNODE结构体的指针，表示需要操作的节点。
- * @param buf 指向存储取出数据的缓冲区。
- * @param len 需要取出的数据长度。-1表示取出所有数据。
- * @return int 返回实际取出发送缓冲区的数据长度，单位为字节。
- */
-int getSendBuf(SOCKNODE *node, char *buf, int len = -1);
-
-/**
- * @brief 从接收缓冲区取出数据
- * 
- * 该函数用于从指定SOCKNODE节点的接收缓冲区中取出数据。
- * 
- * @param node 指向SOCKNODE结构体的指针，表示需要操作的节点。
- * @param buf 指向存储取出数据的缓冲区。
- * @param len 需要取出的数据长度。-1表示取出所有数据。
- * @return int 返回实际取出接收缓冲区的数据长度，单位为字节。
- */
-int getRecvBuf(SOCKNODE *node, char *buf, int len = -1);
-
-/**
- * @brief 执行发送
- * 
- * 该函数用于执行指定SOCKNODE节点的发送操作。
- * 
- * @param node 指向SOCKNODE结构体的指针，表示需要操作的节点。
- * @param slen 需要发送的数据长度，默认为-1表示发送缓冲区中的所有数据。
- * @return int 返回实际发送的数据长度，单位为字节。
- */
-int doSend(SOCKNODE *node , int slen = -1);
-
-/**
- * @brief 执行接收
- * 
- * 该函数用于执行指定SOCKNODE节点的接收操作。
- * 
- * @param node 指向SOCKNODE结构体的指针，表示需要操作的节点。
- * @param rlen 需要接收的数据长度，默认为-1表示接收缓冲区中的所有数据。
- * @return int 返回实际接收的数据长度，单位为字节。
- */
-int doRecv(SOCKNODE *node , int rlen = -1);
-
-/**
- * @brief 发送数据 放入缓冲区并发送
+ * @brief 发送数据
  * 
  * 该函数用于将数据放入指定SOCKNODE节点的发送缓冲区并执行发送操作。
  * 
  * @param node 指向SOCKNODE结构体的指针，表示需要操作的节点。
  * @param buf 指向需要发送的数据缓冲区。
  * @param len 需要发送的数据长度。
- * @return int 返回实际发送的数据长度，单位为字节。
+ * @return int 返回字节数
+ * @note 阻塞模式和非阻塞模式下均保证数据完整性
  */
-int sendMsg(SOCKNODE *node,const char *buf, int len = -1);
+int sendMsg(SOCKNODE *node,const char *buf, int len );
 
 /**
- * @brief 接收数据 刷新缓冲区数据 并且从缓冲区取出
+ * @brief 接收数据 
  * 
  * 该函数用于刷新指定SOCKNODE节点的接收缓冲区数据并从缓冲区中取出数据。
  * 
  * @param node 指向SOCKNODE结构体的指针，表示需要操作的节点。
  * @param buf 指向存储取出数据的缓冲区。
- * @param len 需要取出的数据长度。
- * @return int 返回实际取出接收缓冲区的数据长度，单位为字节。
+ * @param len 缓冲区的最大长度
+ * @return int 返回字节数
+ * @note 阻塞模式和保证数据完整性 
+ *       非阻塞模式下 仅进行单次读取
  */
-int recvMsg(SOCKNODE *node, char *buf, int len= -1);
+int recvMsg(SOCKNODE *node, char *buf, int len);
 
-//清空缓冲区
-int clearBuf(SOCKNODE *node);
-int clearSendBuf(SOCKNODE *node);
-int clearRecvBuf(SOCKNODE *node);
+bool setBlock(SOCKNODE *node);
+bool setNoBlock(SOCKNODE *node);
+bool isblock(SOCKNODE *node);
