@@ -78,10 +78,13 @@ int main() {
                 memset(buf, '\0', sizeof(buf));
                 int n = recvMsg(it->second, buf, sizeof(buf));
                 if (n == 0) {
+
+                    //close connection
                     closeSocket(it->second);
                     FD_CLR(sd, &readfds);
                     printf("user: %s disconnected\n", it->first.c_str());
                     it = sockmap.erase(it);
+                
                 } else {
                     std::string command(buf);
                     size_t pos1 = command.find(' ');
