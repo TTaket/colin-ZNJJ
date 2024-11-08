@@ -16,12 +16,13 @@ int main(){
 
     // 收发数据
     char buf[100] = {};
+    setBlock(sock);
     while(1){
         printf("-----------------\n");
         memset(buf, '\0', sizeof buf);
         fgets(buf, sizeof(buf), stdin);
         sendMsg(sock, buf, strlen(buf));
-        int len = recvMsg(sock, buf);
+        int len = recvMsg(sock, buf , strlen(buf));
         if(len == 0){
             printf("server close\n");
             break;

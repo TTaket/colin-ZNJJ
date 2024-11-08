@@ -15,6 +15,7 @@ int main(){
 
     // 收发数据
     char buf[100] = {};
+    setBlock(newnode);
     while(1){
         printf("-----------------\n");
         memset(buf, '\0', sizeof buf);
