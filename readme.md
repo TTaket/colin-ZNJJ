@@ -23,15 +23,11 @@
 
 收发信息：
 
-- putSendBuf/putRecvBuf/getSendBuf/getSendBuf 缓冲区 和 用户 进行操作
-- doSend/doRecv 缓冲区 和 网卡 进行操作
 - sendMsg/recvMsg 用户最直观的直接通讯的方式 因为实现方式是经过缓冲区 所以是连着缓冲区里面的内容一起使用
-- clearSendBuf/clearRecvBuf 清空缓冲区
 
 填充：
 
 - FullSocketInfo 把端口信息和ip信息填充到结构体内 可以直接读出来
-
 
 #### 关于myerror的使用方式
 

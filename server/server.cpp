@@ -42,7 +42,7 @@ void * dealAcceptConn(void* arg){
 
 int main() {
     SOCKNODE *serverNode = createSocket("listen", strlen("listen"));
-    bindListen(serverNode, 8159);
+    bindListen(serverNode, SERVER_PORT);
     FullSocketInfo(serverNode);
     ERROR_CHECK_AND_CLOSE;
 
@@ -74,7 +74,6 @@ int main() {
             
         }
 
-        // Check all sockets for incoming data
         for (auto it = sockmap.begin(); it != sockmap.end(); ) {
             int sd = it->second->connfd;
             if (FD_ISSET(sd, &tmpfds)) {
@@ -94,7 +93,7 @@ int main() {
                     std::string message = command.substr(pos2 + 1);
 
                     if (action == "/send") {
-                        // show control message
+
                         std::string sysshow;
                         sysshow += "[" + it->first + "]" + " -> " + "[" + target + "]" + " : " + message;
                         printf("%s\n", sysshow.c_str());
@@ -106,7 +105,7 @@ int main() {
                             sendMsg(it->second, retword.c_str(), retword.size());
                         }
                     } else {
-                        // Handle other actions or invalid command
+                        
                         std::string retword = "Invalid command";
                         sendMsg(it->second, retword.c_str(), retword.size());
                     }

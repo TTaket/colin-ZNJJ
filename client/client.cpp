@@ -44,7 +44,6 @@ int main(){
 
     pthread_join(readerThread, nullptr);
 
-    // Close the socket
     closeSocket(sock);
     return 0;
 }
