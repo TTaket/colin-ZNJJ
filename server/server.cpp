@@ -58,7 +58,6 @@ int main() {
         tmpfds = readfds;
 
         int nReadyFd = select(max_sd + 1, &tmpfds, NULL, NULL, &timeout);
-
         if (nReadyFd < 0 && errno != EINTR) {
             ERROR_INFO_ERRNO_ADD("select error");
             continue;
@@ -69,9 +68,8 @@ int main() {
 
         if (FD_ISSET(serverNode->connfd, &tmpfds)) { // New connection
             pthread_t tid;
-            pthread_detach(tid);
             pthread_create(&tid, nullptr, &dealAcceptConn, serverNode);
-            
+            pthread_detach(tid);
         }
 
         for (auto it = sockmap.begin(); it != sockmap.end(); ) {
