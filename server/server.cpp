@@ -26,6 +26,7 @@ void * dealAcceptConn(void* arg){
     memset(buf, '\0', sizeof(buf));
     int readlen = recvMsg(newnode, newnode->name, sizeof(newnode->name));
     while (sockmap.find(newnode->name) != sockmap.end()) {
+        memset(newnode->name ,'\0' , sizeof newnode->name); 
         memset(buf, '\0', sizeof(buf));
         sendMsg(newnode, "已经有这个名字了 请重试", strlen("已经有这个名字了 请重试"));
         readlen = recvMsg(newnode, newnode->name, sizeof(newnode->name));
