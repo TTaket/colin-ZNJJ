@@ -4,7 +4,7 @@
 #include <string>
 
 #define SERVER_PORT 8159
-#define SERVER_IP "192.168.10.115"
+#define SERVER_IP "106.54.203.31"
 
 // 协议的格式
 // 8字节的包头
