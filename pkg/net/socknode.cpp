@@ -108,6 +108,7 @@ int recvMsg(SOCKNODE *node, char *buf, int len) {
 }
 
 
+
 //创建套接字
 SOCKNODE * createSocket( char* name , int namelen){
     SOCKNODE *node = new SOCKNODE();
