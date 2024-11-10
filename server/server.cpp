@@ -24,11 +24,15 @@ void * dealAcceptConn(void* arg){
     SOCKNODE *newnode = acceptConn(sock, "", strlen(""));
     sendMsg(newnode, "enter your name please", strlen("enter your name please"));
     memset(buf, '\0', sizeof(buf));
-    recvMsg(newnode, newnode->name, sizeof(newnode->name));
+    int readlen = recvMsg(newnode, newnode->name, sizeof(newnode->name));
     while (sockmap.find(newnode->name) != sockmap.end()) {
         memset(buf, '\0', sizeof(buf));
         sendMsg(newnode, "已经有这个名字了 请重试", strlen("已经有这个名字了 请重试"));
-        recvMsg(newnode, newnode->name, sizeof(newnode->name));
+        readlen = recvMsg(newnode, newnode->name, sizeof(newnode->name));
+    }
+    if(readlen == 0){
+        closeSocket(newnode);
+        return nullptr;
     }
     FullSocketInfo(newnode);
     sockmap[newnode->name] = newnode;
