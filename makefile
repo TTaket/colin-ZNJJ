@@ -4,12 +4,12 @@ BIN_DIR = bin
 SRC_SERVER = server/server.cpp
 SRC_CLIENT = client/client.cpp
 
-SRC_PKG_DIRS = pkg/net pkg/error
+SRC_PKG_DIRS = pkg/net pkg/error pkg/protocol
 SRCS_PKG = $(foreach dir, $(SRC_PKG_DIRS), $(wildcard $(dir)/*.cpp))
 
 OBJS = $(SRCS:.cpp=.o)
 TARGETS = $(BIN_DIR)/server $(BIN_DIR)/client
-INCLUDES = -Ibase -Ipkg/error -Ipkg/net
+INCLUDES = -Ibase -Ipkg/error -Ipkg/net -Ipkg/protocol
 
 all: $(TARGETS)
 

@@ -14,7 +14,7 @@
 #include <fcntl.h>
 #include <fcntl.h>
 
-#include <sys/wait.h>
+#include <sys/wait.h> 
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <signal.h> 

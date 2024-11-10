@@ -10,9 +10,9 @@ https://github.com/TTaket/colin-ZNJJ/tree/ae19e2d6a8ace6656054f9d6329d2fc99352d0
 
 默认端口 8159  本地运行 127.0.0.1
 
-服务端采用的是select进行多路监听 暂时没有上线程池
 
-客户端是命令行窗口 
+
+客户端是命令行窗口
 
 支持命令
 
