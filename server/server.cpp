@@ -38,7 +38,7 @@ void updateMaxSD(){
 
 void* heartcheck(void * arg){
     while(true){
-        sysPrint("heart check");
+        sysPrint("System Heart Check");
         sleep(120);//每两分钟检查一次
         for(auto it = sockmap.begin(); it != sockmap.end();){
             std::string name = it->first;
@@ -46,9 +46,10 @@ void* heartcheck(void * arg){
             if(lastHeartTime.find(name) == lastHeartTime.end()){
                 //第一次心跳
                 lastHeartTime[name] = time(0);
+                continue;
             }
             if(time(0) - lastHeartTime[name] > 90){
-                sysPrint("user: %s heart check failed", name.c_str());
+                sysPrint("[%s] heart check failed , close connect", name.c_str());
                 closeSocket(it->second);
                 FD_CLR(sd, &readfds);
                 it = sockmap.erase(it);
@@ -95,7 +96,7 @@ void * dealAcceptConn(void* arg){
     max_sd = std::max(max_sd, newnode->connfd);
     std::string retword = std::string("欢迎连接server : ") + newnode->name;
     sendMsg(newnode, retword.c_str(), retword.size());
-    sysPrint("user: %s connected\n", newnode->name);
+    sysPrint("[%s] connected from %s", newnode->name , newnode->ip);
     return nullptr;
 }
 
@@ -110,6 +111,9 @@ int main() {
     pthread_t heartThread;
     pthread_create(&heartThread, nullptr, heartcheck, nullptr);
     pthread_detach(heartThread);
+
+     // 防止写管道关闭 导致崩溃
+    signal(SIGPIPE, SIG_IGN);
 
     char buf[1024] = {};
     FD_ZERO(&readfds);
@@ -146,12 +150,10 @@ int main() {
                     //close connection
                     closeSocket(it->second);
                     FD_CLR(sd, &readfds);
-                    sysPrint("user: %s disconnected\n", it->first.c_str());
+                    sysPrint("[%s] disconnected", it->first.c_str());
                     it = sockmap.erase(it);
                 
                 } else {
-
-                    printf("user: %s \n", buf);
                     std::string command(buf);
                     size_t pos1 = command.find(' ');
                     size_t pos2 = command.find(' ', pos1 + 1);
@@ -174,14 +176,14 @@ int main() {
                     } else if(action == "/exit"){
                         closeSocket(it->second);
                         FD_CLR(sd, &readfds);
-                        sysPrint("user: %s disconnected\n", it->first.c_str());
+                        sysPrint("[%s] disconnected", it->first.c_str());
                         it = sockmap.erase(it);
                     } else if(action == "/heart"){
                         lastHeartTime[it->first] = time(0);
-                        std::string retword = "heart";
+                        std::string retword = "/heart";
                         sendMsg(it->second, retword.c_str(), retword.size());
-                        //打印用户收到了心跳包
-                        sysPrint("user: %s recv heart", it->first.c_str());
+                        //用户 心跳
+                        sysPrint("[%s] hearting", it->first.c_str());
                     }else {
                         std::string retword = "Invalid command";
                         sendMsg(it->second, retword.c_str(), retword.size());
