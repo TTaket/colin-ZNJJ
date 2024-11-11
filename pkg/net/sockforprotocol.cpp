@@ -72,7 +72,9 @@ int sendLogin(SOCKNODE *node, const char *name, int namelen){
     return 0;
 }
 // 处理登录请求
-int dealLogin(SOCKNODE *node, ProtocolBody &body);
+int dealLogin(SOCKNODE *node, ProtocolBody &body){
+    return 0;
+}
 
 // 登出
 // 发送登出请求
@@ -92,7 +94,10 @@ int sendLogout(SOCKNODE *node, const char *name, int namelen){
     return 0;
 }
 // 处理登出请求
-int dealLogout(SOCKNODE *node, ProtocolBody &body);
+int dealLogout(SOCKNODE *node, ProtocolBody &body){
+    return 0;
+
+}
 
 // 心跳
 // 发送心跳包
@@ -110,7 +115,9 @@ int sendHeart(SOCKNODE *node){
     return 0;
 }
 // 处理心跳包
-int dealHeart(SOCKNODE *node, ProtocolBody &body);
+int dealHeart(SOCKNODE *node, ProtocolBody &body){
+    return 0;
+}
 
 // 消息
 // 发送消息
@@ -133,4 +140,6 @@ int sendMsg(SOCKNODE *node, const char *name, int namelen, const char *msg, int 
 }
 
 // 处理消息
-int dealMsg(SOCKNODE *node, ProtocolBody &body);
+int dealMsg(SOCKNODE *node, ProtocolBody &body){
+    return 0;
+}

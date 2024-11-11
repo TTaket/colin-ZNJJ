@@ -108,6 +108,7 @@ int recvMsg(SOCKNODE *node, char *buf, int len) {
 }
 
 
+
 //创建套接字
 SOCKNODE * createSocket( char* name , int namelen){
     SOCKNODE *node = new SOCKNODE();
@@ -176,6 +177,12 @@ int ConnSocket(SOCKNODE *node, const char *ip, int port){
 
 //绑定监听
 int bindListen(SOCKNODE *node, int port){
+    int opt = 1;
+    if (setsockopt(node->connfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+        perror("setsockopt(SO_REUSEADDR) failed");
+        return -1;
+    }
+
     if(node->connfd == -1){
         ERROR_INFO_ERRNO_ADD("invalid socket");
         return -1;
