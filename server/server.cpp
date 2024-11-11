@@ -150,6 +150,8 @@ int main() {
                     it = sockmap.erase(it);
                 
                 } else {
+
+                    printf("user: %s \n", buf);
                     std::string command(buf);
                     size_t pos1 = command.find(' ');
                     size_t pos2 = command.find(' ', pos1 + 1);
