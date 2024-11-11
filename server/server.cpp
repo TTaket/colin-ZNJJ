@@ -112,6 +112,9 @@ int main() {
     pthread_create(&heartThread, nullptr, heartcheck, nullptr);
     pthread_detach(heartThread);
 
+     // 防止写管道关闭 导致崩溃
+    signal(SIGPIPE, SIG_IGN);
+
     char buf[1024] = {};
     FD_ZERO(&readfds);
     FD_SET(serverNode->connfd, &readfds);
