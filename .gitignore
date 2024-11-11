@@ -2,4 +2,4 @@
 *.log
 
 # Ignore bin files
-./bin/*
+/bin/*
