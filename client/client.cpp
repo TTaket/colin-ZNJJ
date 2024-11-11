@@ -2,7 +2,9 @@
 #include "../header/protocol.h"
 #include "../pkg/error/myerror.h"
 #include "../pkg/net/socknode.h"
+#include <csignal>
 #include <cstdio>
+#include <cstring>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -10,10 +12,12 @@
 
 
 bool isRunning = true;
+int lastHeartTime = 0;
+int lastHeartZeroTime = 0;
 void* readMessages(void* arg) {
     SOCKNODE* sock = (SOCKNODE*)arg;
     char buf[100] = {};
-    while (true) {
+    while (isRunning) {
         memset(buf, '\0', sizeof buf);
         int len = recvMsg(sock, buf, sizeof(buf));
         if (len == 0) {
@@ -23,6 +27,7 @@ void* readMessages(void* arg) {
         // 心跳包
         if (strcmp(buf, "/heart") == 0) {
             printf("recv heart\n");
+            lastHeartTime = time(0);
             continue;
         }
         printf("recv from server: %s\n", buf);
@@ -34,7 +39,7 @@ void* readMessages(void* arg) {
 void* sendHeart(void* arg) {
     SOCKNODE* sock = (SOCKNODE*)arg;
     srand(time(0));
-    while (true) {
+    while (isRunning) {
         int ret = sendMsg(sock, "/heart", strlen("/heart"));
         if(ret == -1){
             break;
@@ -42,6 +47,28 @@ void* sendHeart(void* arg) {
         int randomDelay = rand() % 10 + 25; // 25-35s
         sleep(randomDelay);
     }
+    return nullptr;
+}
+
+void* checkHeart(void* arg) {
+    SOCKNODE* sock = (SOCKNODE*)arg;
+    srand(time(0));
+    while (isRunning) {
+        if (lastHeartTime == 0) {
+            lastHeartZeroTime++;
+            if (lastHeartZeroTime > 3) {
+                printf("server heart check failed\n");
+                break;
+            }
+        }
+        if (time(0) - lastHeartTime > 90 && lastHeartTime != 0) {
+            printf("server heart check failed\n");
+            break;
+        }
+        int randomDelay = rand() % 10 + 25; // 25-35s
+        sleep(randomDelay);
+    }
+    isRunning = false;
     return nullptr;
 }
 
@@ -54,10 +81,15 @@ int main(){
     // 接受信息函数
     pthread_t readerThread;
     pthread_create(&readerThread, nullptr, readMessages, sock);
+    pthread_detach(readerThread);
     // 心跳
     pthread_t heartThread;
     pthread_create(&heartThread, nullptr, sendHeart, sock);
     pthread_detach(heartThread);
+    // server心跳检查
+    pthread_t checkHeartThread;
+    pthread_create(&checkHeartThread, nullptr, checkHeart, sock);
+    pthread_detach(checkHeartThread);
     // 防止写管道关闭 导致崩溃
     signal(SIGPIPE, SIG_IGN);
 
@@ -78,9 +110,11 @@ int main(){
             }
             break;
         }
+        if (strcmp("/exit", buf) == 0) {
+            isRunning = false;
+            break;
+        }
     }
-
-    pthread_join(readerThread, nullptr);
 
     closeSocket(sock);
     return 0;
