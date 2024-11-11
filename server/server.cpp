@@ -11,24 +11,78 @@
 
 using namespace std;
 
+SOCKNODE *serverNode;
 std::map<std::string, SOCKNODE *> sockmap;
+std::map<std::string, int> lastHeartTime;//记录上次心跳时间
 int userNameCnt = 0;
 
 fd_set readfds, tmpfds;
 int max_sd;
 
+void sysPrint(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    printf("[SYS] : ");
+    vprintf(format, args);
+    printf("\n");
+    va_end(args);
+}
+
+void updateMaxSD(){
+    int t_max_sd = serverNode->connfd;
+    for(auto it = sockmap.begin(); it != sockmap.end(); ++it){
+        t_max_sd = std::max(t_max_sd, it->second->connfd);
+    }
+    max_sd = t_max_sd;
+}
+
+void* heartcheck(void * arg){
+    while(true){
+        sysPrint("heart check");
+        sleep(120);//每两分钟检查一次
+        for(auto it = sockmap.begin(); it != sockmap.end();){
+            std::string name = it->first;
+            int sd = it->second->connfd;
+            if(lastHeartTime.find(name) == lastHeartTime.end()){
+                //第一次心跳
+                lastHeartTime[name] = time(0);
+            }
+            if(time(0) - lastHeartTime[name] > 90){
+                sysPrint("user: %s heart check failed", name.c_str());
+                closeSocket(it->second);
+                FD_CLR(sd, &readfds);
+                it = sockmap.erase(it);
+                lastHeartTime.erase(lastHeartTime.find(name));
+            }else{
+                ++it;
+            }
+        }
+        updateMaxSD();
+    }
+}
 
 void * dealAcceptConn(void* arg){
-    char buf[1024] = {};
     SOCKNODE *sock = (SOCKNODE *)arg;
     SOCKNODE *newnode = acceptConn(sock, "", strlen(""));
     sendMsg(newnode, "enter your name please", strlen("enter your name please"));
-    memset(buf, '\0', sizeof(buf));
     int readlen = recvMsg(newnode, newnode->name, sizeof(newnode->name));
-    while (sockmap.find(newnode->name) != sockmap.end()) {
+    while (sockmap.find(newnode->name) != sockmap.end() || readlen == 0 || newnode->name[0] == '/') {
+
+        if (readlen == 0) 
+        {
+            closeSocket(newnode);
+            return nullptr;
+        }else if(strcmp(newnode->name, "/heart") == 0)
+        {   
+            //心跳包 继续接受
+        }else if(newnode->name[0] == '/'){
+            sendMsg(newnode, "Invalid name", strlen("Invalid name"));
+        }
+        else
+        {
+            sendMsg(newnode, "Name already exists", strlen("Name already exists"));
+        }
         memset(newnode->name ,'\0' , sizeof newnode->name); 
-        memset(buf, '\0', sizeof(buf));
-        sendMsg(newnode, "已经有这个名字了 请重试", strlen("已经有这个名字了 请重试"));
         readlen = recvMsg(newnode, newnode->name, sizeof(newnode->name));
     }
     if(readlen == 0){
@@ -41,15 +95,21 @@ void * dealAcceptConn(void* arg){
     max_sd = std::max(max_sd, newnode->connfd);
     std::string retword = std::string("欢迎连接server : ") + newnode->name;
     sendMsg(newnode, retword.c_str(), retword.size());
-    printf("user: %s connected\n", newnode->name);
+    sysPrint("user: %s connected\n", newnode->name);
     return nullptr;
 }
 
 int main() {
-    SOCKNODE *serverNode = createSocket("listen", strlen("listen"));
+    serverNode = createSocket("listen", strlen("listen"));
     bindListen(serverNode, SERVER_PORT);
     FullSocketInfo(serverNode);
     ERROR_CHECK_AND_CLOSE;
+    sysPrint("Server start");
+
+    //心跳定期清除
+    pthread_t heartThread;
+    pthread_create(&heartThread, nullptr, heartcheck, nullptr);
+    pthread_detach(heartThread);
 
     char buf[1024] = {};
     FD_ZERO(&readfds);
@@ -83,11 +143,10 @@ int main() {
                 memset(buf, '\0', sizeof(buf));
                 int n = recvMsg(it->second, buf, sizeof(buf));
                 if (n == 0) {
-
                     //close connection
                     closeSocket(it->second);
                     FD_CLR(sd, &readfds);
-                    printf("user: %s disconnected\n", it->first.c_str());
+                    sysPrint("user: %s disconnected\n", it->first.c_str());
                     it = sockmap.erase(it);
                 
                 } else {
@@ -110,16 +169,29 @@ int main() {
                             std::string retword = "No such user";
                             sendMsg(it->second, retword.c_str(), retword.size());
                         }
-                    } else {
-                        
+                    } else if(action == "/exit"){
+                        closeSocket(it->second);
+                        FD_CLR(sd, &readfds);
+                        sysPrint("user: %s disconnected\n", it->first.c_str());
+                        it = sockmap.erase(it);
+                    } else if(action == "/heart"){
+                        lastHeartTime[it->first] = time(0);
+                        std::string retword = "heart";
+                        sendMsg(it->second, retword.c_str(), retword.size());
+                        //打印用户收到了心跳包
+                        sysPrint("user: %s recv heart", it->first.c_str());
+                    }else {
                         std::string retword = "Invalid command";
                         sendMsg(it->second, retword.c_str(), retword.size());
                     }
                     ++it;
+
+                    
                 }
             } else {
                 ++it;
             }
         }
+        updateMaxSD();
     }
 }
