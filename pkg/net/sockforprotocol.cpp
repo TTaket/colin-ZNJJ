@@ -59,8 +59,8 @@ int dealProtocol(SOCKNODE *node , ProtocolHeader &header, ProtocolBody &body){
 int sendLogin(SOCKNODE *node, const char *name, int namelen){
     ProtocolBody body;
     body.numParts = 1;
-    body.lenParts.push_back(namelen);
-    body.data.push_back(std::string(name, namelen));
+    body.lenParts[0] = namelen;
+    memcpy(body.data[0], name, namelen);
 
     ProtocolHeader header;
     header.len = sizeof(body);
