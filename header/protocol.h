@@ -1,11 +1,15 @@
+
 #include <stdio.h>
-#include <cstdint>
-#include <vector>
-#include <string>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define SERVER_PORT 8159
 #define SERVER_IP "127.0.0.1"
 
+
+#define PROTOCOL_MAX_PARTLEN 10
+#define PROTOCOL_MAX_PARTSIZE 1024
 // 协议的格式
 // 8字节的包头
 struct ProtocolHeader {
@@ -15,8 +19,8 @@ struct ProtocolHeader {
 
 struct ProtocolBody {
     uint32_t numParts; // 分为几部分
-    std::vector<int> lenParts; // 每部分的长度
-    std::vector<std::string > data; // 每部分的内容
+    int lenParts[PROTOCOL_MAX_PARTLEN]; // 每部分的长度
+    char data[PROTOCOL_MAX_PARTLEN][PROTOCOL_MAX_PARTSIZE]; // 每部分的内容
 };
 
 // 命令的定义
@@ -37,14 +41,14 @@ enum CMD {
 // 命令的具体内容
 // TODO可以加jwt身份验证
 struct CMD_LOGIN_BODY {
-    std::string name;
+    char name[256];
 };
 
 struct CMD_LOGOUT_BODY {
-    std::string name;
+    char name[256];
 };
 
 struct CMD_MSG_BODY {
-    std::string tarname;
-    std::string msg;
+    char tarname[256];
+    char msg[1024];
 };

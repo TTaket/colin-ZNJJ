@@ -1,4 +1,5 @@
 #include "sockforprotocol.h"
+#include <cstring>
 
 // 读出协议头
 int readHeader(SOCKNODE *node, ProtocolHeader &header) {
@@ -78,8 +79,8 @@ int dealLogin(SOCKNODE *node, ProtocolBody &body);
 int sendLogout(SOCKNODE *node, const char *name, int namelen){
     ProtocolBody body;
     body.numParts = 1;
-    body.lenParts.push_back(namelen);
-    body.data.push_back(std::string(name, namelen));
+    body.lenParts[0] = namelen;
+    memcpy(body.data[0],name , namelen);
 
     ProtocolHeader header;
     header.len = sizeof(body);
@@ -116,10 +117,10 @@ int dealHeart(SOCKNODE *node, ProtocolBody &body);
 int sendMsg(SOCKNODE *node, const char *name, int namelen, const char *msg, int msglen){
     ProtocolBody body;
     body.numParts = 2;
-    body.lenParts.push_back(namelen);
-    body.lenParts.push_back(msglen);
-    body.data.push_back(std::string(name, namelen));
-    body.data.push_back(std::string(msg, msglen));
+    body.lenParts[0] = namelen;
+    body.lenParts[1] = msglen;
+    memcpy(body.data[0], name , namelen);
+    memcpy(body.data[1], msg , msglen);
 
     ProtocolHeader header;
     header.len = sizeof(body);
