@@ -1,6 +1,9 @@
-#include "../../header/protocol.h"
+#include "./protocol.h"
 #include "../../header/stdhead.h"
 
+/*
+    这里提供的函数支持把 buf 和 协议 之间互相转换
+*/
 // 解析协议头
 int parseHeader(const char *buf, ProtocolHeader &header);
 

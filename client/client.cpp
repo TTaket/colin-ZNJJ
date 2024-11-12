@@ -1,5 +1,5 @@
 #include "../header/stdhead.h"
-#include "../header/protocol.h"
+#include "../header/config.h"
 #include "../pkg/error/myerror.h"
 #include "../pkg/net/socknode.h"
 #include <csignal>
@@ -65,7 +65,7 @@ void* checkHeart(void* arg) {
             printf("server heart check failed\n");
             break;
         }
-        int randomDelay = rand() % 10 + 25; // 25-35s
+        int randomDelay = rand() % 10 + 120; //120-130s
         sleep(randomDelay);
     }
     isRunning = false;

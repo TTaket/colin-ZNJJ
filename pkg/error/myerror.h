@@ -1,3 +1,4 @@
+#pragma once
 #include "../net/socknode.h"
 #include <stdio.h>
 
