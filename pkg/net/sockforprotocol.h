@@ -1,42 +1,24 @@
+#pragma once
 #include "./socknode.h"
-#include "../protocol/protocolhelper.h"
 #include "../error/myerror.h"
+#include "../protocol/protocolhelper.h"
+#include "../protocol/protocol.h"
+#include "../protocol/protocoltransform.h"
 
 // 读出协议头
 int readHeader(SOCKNODE *node, ProtocolHeader &header);
 
 // 读出协议体
-int readBody(SOCKNODE *node, ProtocolHeader &header, ProtocolBody &body);
+int readBody(SOCKNODE *node, const ProtocolHeader &header, ProtocolBody &body);
 
-// 处理协议
-int dealProtocol(SOCKNODE *node , ProtocolHeader &header, ProtocolBody &body);
+// 读出一帧消息
+int readProtoMSG(SOCKNODE *node, CMD &cmd , void* data);
 
+// 发送协议头
+int sendHeader(SOCKNODE *node, const ProtocolHeader & header);
 
+// 发送协议体
+int sendBody(SOCKNODE *node, const ProtocolHeader & header ,  const ProtocolBody &body);
 
-
-
-
-/**************具体协议处理  */
-// 登录
-// 发送登录请求
-int sendLogin(SOCKNODE *node, const char *name, int namelen);
-// 处理登录请求
-int dealLogin(SOCKNODE *node, ProtocolBody &body);
-
-// 登出
-// 发送登出请求
-int sendLogout(SOCKNODE *node, const char *name, int namelen);
-// 处理登出请求
-int dealLogout(SOCKNODE *node, ProtocolBody &body);
-
-// 心跳
-// 发送心跳包
-int sendHeart(SOCKNODE *node);
-// 处理心跳包
-int dealHeart(SOCKNODE *node, ProtocolBody &body);
-
-// 消息
-// 发送消息
-int sendMsg(SOCKNODE *node, const char *name, int namelen, const char *msg, int msglen);
-// 处理消息
-int dealMsg(SOCKNODE *node, ProtocolBody &body);
+// 发送一帧消息
+int sendProtoMSG(SOCKNODE *node, CMD cmd , void* data);

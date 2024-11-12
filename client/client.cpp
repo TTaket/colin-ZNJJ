@@ -1,5 +1,5 @@
 #include "../header/stdhead.h"
-#include "../header/protocol.h"
+#include "../header/config.h"
 #include "../pkg/error/myerror.h"
 #include "../pkg/net/socknode.h"
 #include <csignal>

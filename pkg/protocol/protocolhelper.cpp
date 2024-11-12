@@ -1,9 +1,11 @@
 #include "./protocolhelper.h"
+#include "./protocol.h"
+#include <cstring>
 
 // 解析协议头
 int parseHeader(const char *bufheader, ProtocolHeader &header) {
     header.len = *(uint32_t*)bufheader;
-    header.cmd = *(uint32_t*)(bufheader + 4);
+    header.cmd = *(CMD*)(bufheader + 4);
     return 0;
 }
 
@@ -43,6 +45,8 @@ int packBody(char *buf, const ProtocolBody &body) {
     }
     return 0;
 }
+
+//封装协议
 int packProtocol(char *buf, const ProtocolHeader &header, const ProtocolBody &body) {
     packHeader(buf, header);
     packBody(buf + sizeof(ProtocolHeader), body);
