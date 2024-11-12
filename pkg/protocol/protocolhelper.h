@@ -18,3 +18,12 @@ int packBody(char *buf, const ProtocolBody &body);
 
 //封装协议
 int packProtocol(char *buf, const ProtocolHeader &header, const ProtocolBody &body);
+
+
+/*
+    一些工具函数
+*/
+// 获取协议体的大小
+int getBodySize(const ProtocolBody &body);
+void printProtocol(const ProtocolHeader &header, const ProtocolBody &body);
+void printProtocol(CMD cmd , void * data);

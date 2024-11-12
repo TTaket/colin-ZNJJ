@@ -11,6 +11,9 @@
 // 命令的定义
 enum CMD {
     //功能信号
+    //用户注册
+    CMD_USER_REGISTER,
+    CMD_USER_REGISTER_RESP,
     //用户登录
     CMD_USER_LOGIN,
     CMD_USER_LOGIN_RESP,
@@ -51,8 +54,14 @@ enum CMD {
     CMD_ECHO_RESP,
 };
 enum CMD_STATUS {
-    CMD_OK_RESP,
+    CMD_OK_RESP = 200,
     CMD_ERROR_RESP,
+    //错误码
+    CMD_NO_LOGIN,
+    CMD_NO_SUCH_USER,
+    CMD_NO_SUCH_DEV,
+    CMD_ERR_PWD,
+    CMD_HAS_LOGIN,
 };
 enum CMD_DEV_STATUS {
     CMD_DEV_ONLINE,
@@ -75,6 +84,14 @@ typedef struct ProtocolBody {
 
 // 命令的具体内容
 // TODO可以加jwt身份验证
+struct CMD_USER_REGISTER_BODY {
+    char name[256];
+    char pwd[256];
+};
+struct CMD_USER_REGISTER_RESP_BODY {
+    CMD_STATUS cmdstatus;
+    char msg[256];
+};
 struct CMD_USER_LOGIN_BODY{
     char name[256];
     char pwd[256];
@@ -160,7 +177,7 @@ struct CMD_ECHO_BODY {
     char msg[1024];
 };
 struct CMD_ECHO_RESP_BODY {
-    CMD_STATUS cmdStatus;
+    CMD_STATUS cmdstatus;
     char msg[1024];
 };
 

@@ -3,11 +3,12 @@
 #include "../protocol/protocolhelper.h"
 #include "../protocol/protocol.h"
 #include <cstring>
+#include <iostream>
 
 
 // 读出协议头
 int readHeader(SOCKNODE *node, ProtocolHeader &header) {
-    char buf[sizeof(ProtocolHeader)] = {};
+    char buf[sizeof(ProtocolHeader)+1] = {};
     int n = recvMsg(node, buf, sizeof(ProtocolHeader));
     if (n == 0) {
         return 0;
@@ -37,7 +38,7 @@ int readBody(SOCKNODE *node, const ProtocolHeader & header, ProtocolBody &body){
 
 // 发送协议头
 int sendHeader(SOCKNODE *node,const ProtocolHeader &header){
-    char buf[sizeof(ProtocolHeader)] = {};
+    char buf[sizeof(ProtocolHeader)+1] = {};
     packHeader(buf, header);
     int n = sendMsg(node, buf, sizeof(ProtocolHeader));
     if (n != sizeof(ProtocolHeader)) {
@@ -83,12 +84,12 @@ int readProtoMSG(SOCKNODE *node, CMD &cmd , void* data){
 int sendProtoMSG(SOCKNODE *node, CMD cmd , void* data){
     ProtocolHeader header;
     ProtocolBody body;
-    int ret = transformProtocolBody(body, cmd , data);
+    int ret = packProtocolBody(body, cmd , data);
     if(ret != 0){
         return -1;
     }
     header.cmd = cmd;
-    header.len = sizeof(body);
+    header.len = getBodySize(body);
     int n1 = sendHeader(node, header);
     if(n1 <= 0){
         return -1;

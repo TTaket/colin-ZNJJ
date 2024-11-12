@@ -1,3 +1,4 @@
+#pragma once
 #include "../../header/stdhead.h"
 
 void sysPrint(const char *format, ...) {

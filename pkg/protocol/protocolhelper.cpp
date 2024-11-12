@@ -52,3 +52,4 @@ int packProtocol(char *buf, const ProtocolHeader &header, const ProtocolBody &bo
     packBody(buf + sizeof(ProtocolHeader), body);
     return 0;
 }
+
