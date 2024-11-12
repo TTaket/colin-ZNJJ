@@ -6,6 +6,7 @@
 #include "./server_tools/server_tools.h"
 #include "./server_heart/server_heart.h"
 #include "./server_read/server_read.h"
+#include "./server_write/server_write.h"
 #include "./server_global/server_global.h"
 
 using namespace std;
@@ -23,8 +24,15 @@ int main() {
     pthread_create(&heartThread, nullptr, heartcheck, nullptr);
     pthread_detach(heartThread);
 
+    pthread_t writeThread;
+    pthread_create(&writeThread, nullptr, control, nullptr);
+    pthread_detach(writeThread);
+
      // 防止写管道关闭 导致崩溃
     signal(SIGPIPE, SIG_IGN);
+
+    // 初始化日志和错误文件
+    sys_err_init();
 
     char buf[1024] = {};
     FD_ZERO(&readfds);
@@ -33,8 +41,9 @@ int main() {
     struct timeval timeout;
     timeout.tv_sec = 0;
     timeout.tv_usec = 100000; // 100 ms
+    isRunning = true;
 
-    while (1) {
+    while (isRunning) {
         tmpfds = readfds;
 
         int nReadyFd = select(max_sd + 1, &tmpfds, NULL, NULL, &timeout);
@@ -55,15 +64,17 @@ int main() {
         for (auto it = sockmap.begin(); it != sockmap.end(); ) {
             int sd = it->second->connfd;
             if (FD_ISSET(sd, &tmpfds)) {
-                memset(buf, '\0', sizeof(buf));
-                int n = recvMsg(it->second, buf, sizeof(buf));
-                if (n == 0) {
-                    auto dealit = it++;
-                    Disconnect(dealit->second);
-                } else {
-                    auto dealit = it++;
-                    dealClientMessage(dealit->second, buf);
-                }
+                auto dealIte = it++;
+                dealClientMessage(dealIte->second, buf);
+            } else {
+                ++it;
+            }
+        }
+        for (auto it = sockmapUnlogin.begin(); it != sockmapUnlogin.end(); ) {
+            int sd = it->second->connfd;
+            if (FD_ISSET(sd, &tmpfds)) {
+                auto dealIte = it++;
+                dealClientMessage(dealIte->second, buf);
             } else {
                 ++it;
             }

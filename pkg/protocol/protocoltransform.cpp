@@ -2,6 +2,16 @@
 #include "../../header/stdhead.h"
 
 // transform 的实现
+int TransformUserRegister(ProtocolBody &body, struct CMD_USER_REGISTER_BODY &userregister) {
+    memcpy(userregister.name, body.data[0], body.lenParts[0]);
+    memcpy(userregister.pwd, body.data[1], body.lenParts[1]);
+    return 0;
+}
+int TransformUserRegisterResp(ProtocolBody &body, struct CMD_USER_REGISTER_RESP_BODY &userregisterresp) {
+    userregisterresp.cmdstatus = *(CMD_STATUS*)body.data[0];
+    memcpy(userregisterresp.msg, body.data[1], body.lenParts[1]);
+    return 0;
+}
 int TransformUserLogin(ProtocolBody &body, struct CMD_USER_LOGIN_BODY &userlogin) {
     memcpy(userlogin.name, body.data[0], body.lenParts[0]);
     memcpy(userlogin.pwd, body.data[1], body.lenParts[1]);
@@ -111,8 +121,29 @@ int TransformEcho(ProtocolBody &body, struct CMD_ECHO_BODY &echo) {
     memcpy(echo.msg, body.data[1],body.lenParts[1]);
     return 0;
 }
+int TransformEchoResp(ProtocolBody &body, struct CMD_ECHO_RESP_BODY &echoresp) {
+    echoresp.cmdstatus = *(CMD_STATUS*)body.data[0];
+    memcpy(echoresp.msg, body.data[1], body.lenParts[1]);
+    return 0;
+}
 
 // pack 的实现
+int PackUserRegister(ProtocolBody &body, struct CMD_USER_REGISTER_BODY &userregister) {
+    body.numParts = 2;
+    body.lenParts[0] = strlen(userregister.name);
+    body.lenParts[1] = strlen(userregister.pwd);
+    memcpy(body.data[0], userregister.name, body.lenParts[0]);
+    memcpy(body.data[1], userregister.pwd, body.lenParts[1]);
+    return 0;
+}
+int PackUserRegisterResp(ProtocolBody &body, struct CMD_USER_REGISTER_RESP_BODY &userregisterresp) {
+    body.numParts = 2;
+    body.lenParts[0] = sizeof(CMD_STATUS);
+    body.lenParts[1] = strlen(userregisterresp.msg);
+    memcpy(body.data[0], &userregisterresp.cmdstatus, body.lenParts[0]);
+    memcpy(body.data[1], userregisterresp.msg, body.lenParts[1]);
+    return 0;
+}
 int PackUserLogin(ProtocolBody &body, struct CMD_USER_LOGIN_BODY &userlogin) {
     body.numParts = 2;
     body.lenParts[0] = strlen(userlogin.name);
@@ -279,56 +310,95 @@ int PackEcho(ProtocolBody &body, struct CMD_ECHO_BODY &echo) {
     memcpy(body.data[1], echo.msg, body.lenParts[1]);
     return 0;
 }
-
+int PackEchoResp(ProtocolBody &body, struct CMD_ECHO_RESP_BODY &echoresp) {
+    body.numParts = 2;
+    body.lenParts[0] = sizeof(CMD_STATUS);
+    body.lenParts[1] = strlen(echoresp.msg);
+    memcpy(body.data[0], &echoresp.cmdstatus, body.lenParts[0]);
+    memcpy(body.data[1], echoresp.msg, body.lenParts[1]);
+    return 0;
+}
 
 int transformProtocolBody(ProtocolBody &body , CMD cmd , void *data){
     switch (cmd) {
+        case CMD_USER_REGISTER:
+            return TransformUserRegister(body, *(CMD_USER_REGISTER_BODY*)data);
+            break;
+        case CMD_USER_REGISTER_RESP:
+            return TransformUserRegisterResp(body, *(CMD_USER_REGISTER_RESP_BODY*)data);
+            break;
         case CMD_USER_LOGIN:
             return TransformUserLogin(body, *(CMD_USER_LOGIN_BODY*)data);
+            break;
         case CMD_USER_LOGIN_RESP:
             return TransformUserLoginResp(body, *(CMD_USER_LOGIN_RESP_BODY*)data);
+            break;
         case CMD_USER_LOGOUT:
             return TransformUserLogout(body, *(CMD_USER_LOGOUT_BODY*)data);
+            break;
         case CMD_USER_LOGOUT_RESP:
             return TransformUserLogoutResp(body, *(CMD_USER_LOGOUT_RESP_BODY*)data);
+            break;
         case CMD_DEV_LOGIN:
             return TransformDevLogin(body, *(CMD_DEV_LOGIN_BODY*)data);
+            break;
         case CMD_DEV_LOGIN_RESP:
             return TransformDevLoginResp(body, *(CMD_DEV_LOGIN_RESP_BODY*)data);
+            break;
         case CMD_DEV_LOGOUT:
             return TransformDevLogout(body, *(CMD_DEV_LOGOUT_BODY*)data);
+            break;
         case CMD_DEV_LOGOUT_RESP:
             return TransformDevLogoutResp(body, *(CMD_DEV_LOGOUT_RESP_BODY*)data);
+            break;
         case CMD_HEART:
             return TransformHeart(body, *(CMD_HEART_BODY*)data);
+            break;
         case CMD_HEART_RESP:
             return TransformHeartResp(body, *(CMD_HEART_RESP_BODY*)data);
+            break;
         case CMD_MSG:
             return TransformMsg(body, *(CMD_MSG_BODY*)data);
+            break;
         case CMD_MSG_RESP:
             return TransformMsgResp(body, *(CMD_MSG_RESP_BODY*)data);
+            break;
         case CMD_NOTICE:
             return TransformNotice(body, *(CMD_NOTICE_BODY*)data);
+            break;
         case CMD_NOTICE_RESP:
             return TransformNoticeResp(body, *(CMD_NOTICE_RESP_BODY*)data);
+            break;
         case CMD_USER_ADD_DEV:
             return TransformUserAddDev(body, *(CMD_USER_ADD_DEV_BODY*)data);
+            break;
         case CMD_USER_ADD_DEV_RESP:
             return TransformUserAddDevResp(body, *(CMD_USER_ADD_DEV_RESP_BODY*)data);
+            break;
         case CMD_USER_DEL_DEV:
             return TransformUserDelDev(body, *(CMD_USER_DEL_DEV_BODY*)data);
+            break;
         case CMD_USER_DEL_DEV_RESP:
             return TransformUserDelDevResp(body, *(CMD_USER_DEL_DEV_RESP_BODY*)data);
+            break;
         case CMD_GETLIST:
             return TransformGetList(body, *(CMD_GETLIST_BODY*)data);
+            break;
         case CMD_GETLIST_RESP:
             return TransformGetListResp(body, *(CMD_GETLIST_RESP_BODY*)data);
+            break;
         case CMD_GETSTATUS:
             return TransformGetStatus(body, *(CMD_GETSTATUS_BODY*)data);
+            break;
         case CMD_GETSTATUS_RESP:
             return TransformGetStatusResp(body, *(CMD_GETSTATUS_RESP_BODY*)data);       
+            break;
         case CMD_ECHO:
             return TransformEcho(body, *(CMD_ECHO_BODY*)data);
+            break;
+        case CMD_ECHO_RESP:
+            return TransformEchoResp(body, *(CMD_ECHO_RESP_BODY*)data);
+            break;
         default:
             return -1;
     }
@@ -337,6 +407,10 @@ int transformProtocolBody(ProtocolBody &body , CMD cmd , void *data){
 
 int packProtocolBody(ProtocolBody &body , CMD cmd , void *data){
     switch (cmd) {
+        case CMD_USER_REGISTER:
+            return PackUserRegister(body, *(CMD_USER_REGISTER_BODY*)data);
+        case CMD_USER_REGISTER_RESP:
+            return PackUserRegisterResp(body, *(CMD_USER_REGISTER_RESP_BODY*)data);
         case CMD_USER_LOGIN:
             return PackUserLogin(body, *(CMD_USER_LOGIN_BODY*)data);
         case CMD_USER_LOGIN_RESP:
@@ -383,6 +457,8 @@ int packProtocolBody(ProtocolBody &body , CMD cmd , void *data){
             return PackGetStatusResp(body, *(CMD_GETSTATUS_RESP_BODY*)data);
         case CMD_ECHO:
             return PackEcho(body, *(CMD_ECHO_BODY*)data);
+        case CMD_ECHO_RESP:
+            return PackEchoResp(body , *(CMD_ECHO_RESP_BODY*)data);
         default:
             return -1;
     }
