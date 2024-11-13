@@ -19,7 +19,7 @@ void* readMessages(void* arg) {
     char buf[100] = {};
     while (isRunning) {
         memset(buf, '\0', sizeof buf);
-        int len = recvMsg(sock, buf, sizeof(buf));
+        int len = recvMsgTwo(sock, buf, sizeof(buf));
         if (len == 0) {
             printf("server close\n");
             break;
@@ -40,7 +40,7 @@ void* sendHeart(void* arg) {
     SOCKNODE* sock = (SOCKNODE*)arg;
     srand(time(0));
     while (isRunning) {
-        int ret = sendMsg(sock, "/heart", strlen("/heart"));
+        int ret = sendMsgTwo(sock, "/heart", strlen("/heart"));
         if(ret == -1){
             break;
         }
@@ -101,7 +101,7 @@ int main(){
         //缺少输入检查
         scanf("%99[^\n]", buf);
         getchar();
-        int ret = sendMsg(sock, buf, strlen(buf));
+        int ret = sendMsgTwo(sock, buf, strlen(buf));
         if(ret == -1 ){
             if( errno == EPIPE){
                 ERROR_INFO_ERRNO_SOCKNODE_ADD("server close", sock);

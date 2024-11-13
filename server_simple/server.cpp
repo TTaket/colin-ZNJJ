@@ -65,8 +65,8 @@ void* heartcheck(void * arg){
 void * dealAcceptConn(void* arg){
     SOCKNODE *sock = (SOCKNODE *)arg;
     SOCKNODE *newnode = acceptConn(sock, "", strlen(""));
-    sendMsg(newnode, "enter your name please", strlen("enter your name please"));
-    int readlen = recvMsg(newnode, newnode->name, sizeof(newnode->name));
+    sendMsgTwo(newnode, "enter your name please", strlen("enter your name please"));
+    int readlen = recvMsgTwo(newnode, newnode->name, sizeof(newnode->name));
     while (sockmap.find(newnode->name) != sockmap.end() || readlen == 0 || newnode->name[0] == '/') {
 
         if (readlen == 0) 
@@ -77,14 +77,14 @@ void * dealAcceptConn(void* arg){
         {   
             //心跳包 继续接受
         }else if(newnode->name[0] == '/'){
-            sendMsg(newnode, "Invalid name", strlen("Invalid name"));
+            sendMsgTwo(newnode, "Invalid name", strlen("Invalid name"));
         }
         else
         {
-            sendMsg(newnode, "Name already exists", strlen("Name already exists"));
+            sendMsgTwo(newnode, "Name already exists", strlen("Name already exists"));
         }
         memset(newnode->name ,'\0' , sizeof newnode->name); 
-        readlen = recvMsg(newnode, newnode->name, sizeof(newnode->name));
+        readlen = recvMsgTwo(newnode, newnode->name, sizeof(newnode->name));
     }
     if(readlen == 0){
         closeSocket(newnode);
@@ -95,7 +95,7 @@ void * dealAcceptConn(void* arg){
     FD_SET(newnode->connfd, &readfds);
     max_sd = std::max(max_sd, newnode->connfd);
     std::string retword = std::string("欢迎连接server : ") + newnode->name;
-    sendMsg(newnode, retword.c_str(), retword.size());
+    sendMsgTwo(newnode, retword.c_str(), retword.size());
     sysPrint("[%s] connected from %s", newnode->name , newnode->ip);
     return nullptr;
 }
@@ -126,7 +126,6 @@ int main() {
     while (1) {
         tmpfds = readfds;
 
-        sysPrint("Server run1");
         int nReadyFd = select(max_sd + 1, &tmpfds, NULL, NULL, &timeout);
         if (nReadyFd < 0 && errno != EINTR) {
             ERROR_INFO_ERRNO_ADD("select error");
@@ -135,8 +134,6 @@ int main() {
         if (nReadyFd == 0) {
             continue;
         }
-
-        sysPrint("Server run2");
         if (FD_ISSET(serverNode->connfd, &tmpfds)) { // New connection
             pthread_t tid;
             pthread_create(&tid, nullptr, &dealAcceptConn, serverNode);
@@ -144,12 +141,10 @@ int main() {
         }
 
         for (auto it = sockmap.begin(); it != sockmap.end(); ) {
-
-            sysPrint("Server run3");
             int sd = it->second->connfd;
             if (FD_ISSET(sd, &tmpfds)) {
                 memset(buf, '\0', sizeof(buf));
-                int n = recvMsg(it->second, buf, sizeof(buf));
+                int n = recvMsgTwo(it->second, buf, sizeof(buf));
                 if (n == 0) {
                     //close connection
                     closeSocket(it->second);
@@ -172,10 +167,10 @@ int main() {
                         printf("%s\n", sysshow.c_str());
 
                         if (sockmap.find(target) != sockmap.end()) {
-                            sendMsg(sockmap[target], sysshow.c_str(), sysshow.size());
+                            sendMsgTwo(sockmap[target], sysshow.c_str(), sysshow.size());
                         } else {
                             std::string retword = "No such user";
-                            sendMsg(nowit->second, retword.c_str(), retword.size());
+                            sendMsgTwo(nowit->second, retword.c_str(), retword.size());
                         }
                     } else if(action == "/exit"){
                         closeSocket(nowit->second);
@@ -184,12 +179,12 @@ int main() {
                     } else if(action == "/heart"){
                         lastHeartTime[nowit->first] = time(0);
                         std::string retword = "/heart";
-                        sendMsg(nowit->second, retword.c_str(), retword.size());
+                        sendMsgTwo(nowit->second, retword.c_str(), retword.size());
                         //用户 心跳
                         sysPrint("[%s] hearting", nowit->first.c_str());
                     }else {
                         std::string retword = "Invalid command";
-                        sendMsg(nowit->second, retword.c_str(), retword.size());
+                        sendMsgTwo(nowit->second, retword.c_str(), retword.size());
                     }
 
                 }

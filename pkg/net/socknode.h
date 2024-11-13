@@ -111,10 +111,35 @@ int sendMsg(SOCKNODE *node,const char *buf, int len );
  * @param buf 指向存储取出数据的缓冲区。
  * @param len 缓冲区的最大长度
  * @return int 返回字节数
- * @note 阻塞模式和保证数据完整性 
- *       非阻塞模式下 仅进行单次读取
  */
 int recvMsg(SOCKNODE *node, char *buf, int len);
+
+/**
+ * @brief 接收数据 
+ * 
+ * 该函数用于刷新指定SOCKNODE节点的接收缓冲区数据并从缓冲区中取出数据。
+ * 
+ * @param node 指向SOCKNODE结构体的指针，表示需要操作的节点。
+ * @param buf 指向存储取出数据的缓冲区。
+ * @param len 强制制定阻塞读入len字节
+ * @return int 返回字节数
+ */
+int recvMsgWithLen(SOCKNODE *node, char *buf, int len);
+
+/**
+ * @brief 接收数据 两次，包大小 - 包内容
+ * @param node 指向SOCKNODE结构体的指针，表示需要操作的节点。
+ * @param buf 指向存储取出数据的缓冲区。
+ * @param len 为缓冲区大小
+ */
+int recvMsgTwo(SOCKNODE *node, char *buf, int len);
+/**
+ * @brief 发送 两次，包大小 - 包内容
+ * @param node 指向SOCKNODE结构体的指针，表示需要操作的节点。
+ * @param buf 指向存储取出数据的缓冲区。
+ * @param len 为缓冲区大小
+ */
+int sendMsgTwo(SOCKNODE *node,const  char *buf, int len);
 
 bool setBlock(SOCKNODE *node);
 bool setNoBlock(SOCKNODE *node);
