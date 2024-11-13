@@ -1,6 +1,6 @@
 #include "./server_read.h"
 #include "../../pkg/net/socknode.h"
-#include "../../server/server_global/server_global.h"
+#include "../server_global/server_global.h"
 
 
 void * dealAcceptConn(void* arg){

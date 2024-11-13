@@ -1,5 +1,5 @@
 #include "./server_read.h"
-#include "../../server/server_global/server_global.h"
+#include "../server_global/server_global.h"
 
 
 void Disconnect(SOCKNODE * node){
