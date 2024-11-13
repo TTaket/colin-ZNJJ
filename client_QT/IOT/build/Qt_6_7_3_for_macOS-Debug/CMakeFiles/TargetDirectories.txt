@@ -1,0 +1,9 @@
+/Users/lijingyang/working/net/client_QT/IOT/build/Qt_6_7_3_for_macOS-Debug/CMakeFiles/IOT.dir
+/Users/lijingyang/working/net/client_QT/IOT/build/Qt_6_7_3_for_macOS-Debug/CMakeFiles/edit_cache.dir
+/Users/lijingyang/working/net/client_QT/IOT/build/Qt_6_7_3_for_macOS-Debug/CMakeFiles/rebuild_cache.dir
+/Users/lijingyang/working/net/client_QT/IOT/build/Qt_6_7_3_for_macOS-Debug/CMakeFiles/list_install_components.dir
+/Users/lijingyang/working/net/client_QT/IOT/build/Qt_6_7_3_for_macOS-Debug/CMakeFiles/install.dir
+/Users/lijingyang/working/net/client_QT/IOT/build/Qt_6_7_3_for_macOS-Debug/CMakeFiles/install/local.dir
+/Users/lijingyang/working/net/client_QT/IOT/build/Qt_6_7_3_for_macOS-Debug/CMakeFiles/install/strip.dir
+/Users/lijingyang/working/net/client_QT/IOT/build/Qt_6_7_3_for_macOS-Debug/CMakeFiles/IOT_autogen_timestamp_deps.dir
+/Users/lijingyang/working/net/client_QT/IOT/build/Qt_6_7_3_for_macOS-Debug/CMakeFiles/IOT_autogen.dir
