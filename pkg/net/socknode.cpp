@@ -106,8 +106,73 @@ int recvMsg(SOCKNODE *node, char *buf, int len) {
         }
     }
 }
+int recvMsgWithLen(SOCKNODE *node, char *buf, int len){
+    if(len == -1) {
+        return -1;
+    }
+    if(len == 0){
+        return 0;
+    }
 
 
+    int recv_bytes = 0;
+    int ret = 0;
+    while (true)
+    {
+        ret = recv(node->connfd, buf + recv_bytes, len - recv_bytes, 0);
+        if (ret > 0) {
+            recv_bytes += ret;
+            if (recv_bytes == len){
+                break;
+            }
+        } else if (ret == 0) {// 对端关闭连接
+            return 0;
+        } else {
+            if (errno == EAGAIN || errno == EWOULDBLOCK){
+                break; //非阻塞的读取干净了
+            } else if(errno == EINTR){
+                continue;
+            } else {
+                // 其他错误，返回失败
+                ERROR_INFO_ERRNO_SOCKNODE_ADD("recv err", node);
+                return -1;
+            }
+        }
+    }
+    return recv_bytes;
+}
+
+int recvMsgTwo(SOCKNODE *node, char *buf, int buflen){
+    int buf_readlen = 0;
+    int recvlen = 0;
+    recvlen = recvMsgWithLen(node, (char *)&buf_readlen , 4); // 读取4个字节的int
+    if (recvlen == 0) {
+        return 0;
+    }
+    int readlen = buf_readlen;// 小端读
+    if (readlen > buflen) {
+        ERROR_INFO_ERRNO_SOCKNODE_ADD("too much info", node);
+        return -1;
+    }
+    recvlen = recvMsgWithLen(node, buf, readlen);
+    if (recvlen == 0) {
+        return 0;
+    }
+    return recvlen;
+}
+int sendMsgTwo(SOCKNODE *node, const char *buf, int len){
+    int sendlen = len;
+    int sendret = 0;
+    sendret = sendMsg(node, (char * ) & sendlen ,  4);
+    if(sendret == -1){
+        return -1;
+    }
+    sendret = sendMsg(node, buf , sendlen);
+    if(sendret == -1){
+        return -1;
+    }
+    return sendret;
+}
 
 //创建套接字
 SOCKNODE * createSocket( char* name , int namelen){
