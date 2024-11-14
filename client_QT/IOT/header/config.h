@@ -1,3 +1,3 @@
 #define SERVER_PORT 8159
-//#define SERVER_IP "106.54.203.31"
-#define SERVER_IP "127.0.0.1"
+#define SERVER_IP "106.54.203.31"
+//#define SERVER_IP "127.0.0.1"

@@ -36,3 +36,23 @@ void MainWindow::on_pb_sendCmd_clicked()
     client->sendMessages(retstring.toStdString().c_str() , retstring.length());
 }
 
+
+void MainWindow::on_pb_cmd1_clicked()
+{
+    QString retstring;
+    retstring += "/cmd ";
+    retstring += "stm32_01 ";
+    retstring += "openLed";
+    client->sendMessages(retstring.toStdString().c_str() , retstring.length());
+}
+
+
+void MainWindow::on_pb_cmd2_clicked()
+{
+    QString retstring;
+    retstring += "/cmd ";
+    retstring += "stm32_01 ";
+    retstring += "offfLed";
+    client->sendMessages(retstring.toStdString().c_str() , retstring.length());
+}
+

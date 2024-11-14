@@ -2,6 +2,9 @@
 #include "./sock.h"
 #include <cstdio>
 #include <cstring>
+#include <QThread>
+#include <QCoreApplication>
+#include <QEventLoop>
 
 //发送数据放入缓冲区
 int sendMsg(SOCKNODE *node,const char *buf, int len ){
@@ -15,15 +18,27 @@ int sendMsg(SOCKNODE *node,const char *buf, int len ){
 }
 
 //接收数据并放入缓冲区
+//会丢数据 不建议使用
 int recvMsg(SOCKNODE *node, char *buf, int len) {
+    qDebug() << "//会丢数据 不建议使用";
     //只提供阻塞方式
-    int bytesRead = node->connfd->read(buf, len);
-    if (bytesRead == -1) {
-        return -1;
-    } else if (bytesRead == 0) {
-        return 0;  // 对端关闭连接
+    QByteArray data = node->connfd->readAll();
+    if (data.isEmpty()) {
+        // 检查异常情况
+        if (node->connfd->state() == QTcpSocket::UnconnectedState) {
+            qDebug() << "Connection closed by the remote host.";
+        } else if (node->connfd->error() != QAbstractSocket::UnknownSocketError) {
+            qDebug() << "Socket error occurred:" << node->connfd->errorString();
+        } else {
+            qDebug() << "No data available to read.";
+        }
+    } else {
+        qDebug() << "Data received:" << data;
     }
-    return bytesRead;
+    int cplen = data.size() > len ? len :data.size() ;
+    std::memcpy(buf, data.data(), cplen);
+
+    return data.length();
 }
 int recvMsgWithLen(SOCKNODE *node, char *buf, int len) {
     if(len == -1) {
@@ -37,16 +52,22 @@ int recvMsgWithLen(SOCKNODE *node, char *buf, int len) {
 
     while (totalBytesRead < len) {
 
-        // 读取尽可能多的数据
-        int bytesRead = node->connfd->read(buf + totalBytesRead, len - totalBytesRead);
+        if(node->connfd->bytesAvailable()){
+            // 读取尽可能多的数据
+            int bytesRead = node->connfd->read(buf + totalBytesRead, len - totalBytesRead);
 
-        if (bytesRead == -1) {
-            return -1;
-        } else if (bytesRead == 0) {
-            return 0;  // 对端关闭连接
+            if (bytesRead == -1) {
+                return -1;
+            } else if (bytesRead == 0) {
+                return 0;  // 对端关闭连接
+            }
+
+            totalBytesRead += bytesRead;
+        }else{
+             QCoreApplication::processEvents(QEventLoop::WaitForMoreEvents, 100);
+
         }
 
-        totalBytesRead += bytesRead;
     }
     // 成功读取len字节
     return totalBytesRead;
