@@ -1,8 +1,14 @@
-#include "sockforprotocol.h"
+#include "./sockforprotocol.h"
+#include "../protocol/protocolhelper.h"
+#include "../protocol/protocolhelper.h"
+#include "../protocol/protocol.h"
+#include <cstring>
+#include <iostream>
+
 
 // 读出协议头
 int readHeader(SOCKNODE *node, ProtocolHeader &header) {
-    char buf[sizeof(ProtocolHeader)] = {};
+    char buf[sizeof(ProtocolHeader)+1] = {};
     int n = recvMsg(node, buf, sizeof(ProtocolHeader));
     if (n == 0) {
         return 0;
@@ -12,11 +18,11 @@ int readHeader(SOCKNODE *node, ProtocolHeader &header) {
         return -1;
     }
     parseHeader(buf, header);
-    return 0;
+    return n;
 }
 
 // 读出协议体
-int readBody(SOCKNODE *node, ProtocolHeader &header, ProtocolBody &body){
+int readBody(SOCKNODE *node, const ProtocolHeader & header, ProtocolBody &body){
     char buf[1024] = {};
     int n = recvMsg(node, buf, header.len);
     if (n == 0) {
@@ -27,118 +33,70 @@ int readBody(SOCKNODE *node, ProtocolHeader &header, ProtocolBody &body){
         return -1;
     }
     parseBody(buf, body);
-    return 0;
+    return n;
 }
 
-// 处理协议
-int dealProtocol(SOCKNODE *node , ProtocolHeader &header, ProtocolBody &body){
-    switch (header.cmd) {
-        case CMD_LOGIN:
-            return dealLogin(node, body);
-        case CMD_LOGOUT:
-            return dealLogout(node, body);
-        case CMD_HEART:
-            return dealHeart(node, body);
-        case CMD_MSG:
-            return dealMsg(node, body);
-        default:
-            ERROR_INFO_ADD("unknow cmd" );
-            return -1;
+// 发送协议头
+int sendHeader(SOCKNODE *node,const ProtocolHeader &header){
+    char buf[sizeof(ProtocolHeader)+1] = {};
+    packHeader(buf, header);
+    int n = sendMsg(node, buf, sizeof(ProtocolHeader));
+    if (n != sizeof(ProtocolHeader)) {
+        ERROR_INFO_ERRNO_SOCKNODE_ADD("send header error" ,  node);
+        return -1;
     }
+    return n;
 }
 
-
-
-
-
-
-/**************具体协议处理  */
-// 登录
-// 发送登录请求
-int sendLogin(SOCKNODE *node, const char *name, int namelen){
-    ProtocolBody body;
-    body.numParts = 1;
-    body.lenParts.push_back(namelen);
-    body.data.push_back(std::string(name, namelen));
-
-    ProtocolHeader header;
-    header.len = sizeof(body);
-    header.cmd = CMD_LOGIN;
-    
+// 发送协议体
+int sendBody(SOCKNODE *node, const ProtocolHeader & header ,  const ProtocolBody &body){
     char buf[1024] = {};
-    packProtocol(buf, header, body);
-    sendMsg(node, buf, sizeof(header) + sizeof(body) );
-    return 0;
-}
-// 处理登录请求
-int dealLogin(SOCKNODE *node, ProtocolBody &body){
-    return 0;
+    packBody(buf, body);
+    int n = sendMsg(node, buf, header.len);
+    if (n != header.len) {
+        ERROR_INFO_ERRNO_SOCKNODE_ADD("send body error" ,  node);
+        return -1;
+    }
+    return n;
 }
 
-// 登出
-// 发送登出请求
-int sendLogout(SOCKNODE *node, const char *name, int namelen){
-    ProtocolBody body;
-    body.numParts = 1;
-    body.lenParts.push_back(namelen);
-    body.data.push_back(std::string(name, namelen));
-
+// 读出一帧消息
+int readProtoMSG(SOCKNODE *node, CMD &cmd , void* data){
     ProtocolHeader header;
-    header.len = sizeof(body);
-    header.cmd = CMD_LOGOUT;
-    
-    char buf[1024] = {};
-    packProtocol(buf, header, body);
-    sendMsg(node, buf, sizeof(header) + sizeof(body) );
-    return 0;
-}
-// 处理登出请求
-int dealLogout(SOCKNODE *node, ProtocolBody &body){
-    return 0;
-
-}
-
-// 心跳
-// 发送心跳包
-int sendHeart(SOCKNODE *node){
     ProtocolBody body;
-    body.numParts = 0;
+    int n1 = readHeader(node, header);
+    if (n1 <= 0) {
+        return n1;
+    }
+    int n2 = readBody(node, header, body);
+    if (n2 <= 0) {
+        return n2;
+    }
+    int ret = transformProtocolBody(body, header.cmd , data);
+    if(ret != 0){
+        return -1;
+    }
+    cmd = header.cmd;
+    return n1 + n2 ;
+}
 
+// 发送一帧消息
+int sendProtoMSG(SOCKNODE *node, CMD cmd , void* data){
     ProtocolHeader header;
-    header.len = sizeof(body);
-    header.cmd = CMD_HEART;
-    
-    char buf[1024] = {};
-    packProtocol(buf, header, body);
-    sendMsg(node, buf, sizeof(header) + sizeof(body) );
-    return 0;
-}
-// 处理心跳包
-int dealHeart(SOCKNODE *node, ProtocolBody &body){
-    return 0;
-}
-
-// 消息
-// 发送消息
-int sendMsg(SOCKNODE *node, const char *name, int namelen, const char *msg, int msglen){
     ProtocolBody body;
-    body.numParts = 2;
-    body.lenParts.push_back(namelen);
-    body.lenParts.push_back(msglen);
-    body.data.push_back(std::string(name, namelen));
-    body.data.push_back(std::string(msg, msglen));
-
-    ProtocolHeader header;
-    header.len = sizeof(body);
-    header.cmd = CMD_MSG;
-    
-    char buf[1024] = {};
-    packProtocol(buf, header, body);
-    sendMsg(node, buf, sizeof(header) + sizeof(body) );
-    return 0;
-}
-
-// 处理消息
-int dealMsg(SOCKNODE *node, ProtocolBody &body){
-    return 0;
+    int ret = packProtocolBody(body, cmd , data);
+    if(ret != 0){
+        return -1;
+    }
+    header.cmd = cmd;
+    header.len = getBodySize(body);
+    int n1 = sendHeader(node, header);
+    if(n1 <= 0){
+        return -1;
+    }
+    int n2 = sendBody(node , header, body);
+    if(n2 <= 0){
+        return -1;
+    }
+    return n1 + n2;
 }

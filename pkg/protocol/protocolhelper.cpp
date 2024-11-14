@@ -1,25 +1,24 @@
 #include "./protocolhelper.h"
+#include "./protocol.h"
+#include <cstring>
 
 // 解析协议头
 int parseHeader(const char *bufheader, ProtocolHeader &header) {
     header.len = *(uint32_t*)bufheader;
-    header.cmd = *(uint32_t*)(bufheader + 4);
+    header.cmd = *(CMD*)(bufheader + 4);
     return 0;
 }
 
 // 解析协议体
 int parseBody(const char *bufbody, ProtocolBody &body) {
-    int bodypartnum = 0;
-    if (body.data.size() >= 4) {
-        bodypartnum = *(int*)bufbody;
+    body.numParts = *(int*)bufbody;
+    int offset = 4;
+    for (int i = 0; i < body.numParts; i++) {
+        body.lenParts[i] = *(int*)(bufbody + offset);
+        offset += 4;
     }
-    for (int i = 0; i < bodypartnum; i++) {
-        int partlen = *(int*)(bufbody + 4 + i * 4);
-        body.lenParts.push_back(partlen);
-    }
-    int offset = 4 + 4 * bodypartnum;
-    for (int i = 0; i < bodypartnum; i++) {
-        body.data.push_back(std::string(bufbody + offset, body.lenParts[i]));
+    for (int i = 0; i < body.numParts; i++) {
+        memcpy(body.data[i], bufbody + offset, body.lenParts[i]);
         offset += body.lenParts[i];
     }
     return 0;
@@ -34,17 +33,15 @@ int packHeader(char *buf, const ProtocolHeader &header) {
 
 //封装协议体
 int packBody(char *buf, const ProtocolBody &body) {
-    int bodypartnum = body.data.size();
-    memcpy(buf, &bodypartnum, 4);
+    memcpy(buf, &body.numParts, 4);
     int offset = 4;
-    for (int i = 0; i < bodypartnum; i++) {
-        int partlen = body.data[i].size();
-        memcpy(buf + offset, &partlen, 4);
+    for (int i = 0; i < body.numParts; i++) {
+        memcpy(buf + offset, &body.lenParts[i], 4);
         offset += 4;
     }
-    for (int i = 0; i < bodypartnum; i++) {
-        memcpy(buf + offset, body.data[i].c_str(), body.data[i].size());
-        offset += body.data[i].size();
+    for (int i = 0; i < body.numParts; i++) {
+        memcpy(buf + offset, body.data[i], body.lenParts[i]);
+        offset += body.lenParts[i];
     }
     return 0;
 }
@@ -55,3 +52,4 @@ int packProtocol(char *buf, const ProtocolHeader &header, const ProtocolBody &bo
     packBody(buf + sizeof(ProtocolHeader), body);
     return 0;
 }
+

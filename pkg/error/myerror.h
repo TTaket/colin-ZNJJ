@@ -1,3 +1,4 @@
+#pragma once
 #include "../net/socknode.h"
 #include <stdio.h>
 
@@ -20,5 +21,6 @@ void sys_add_error_errno(const char* sys ,const int syslen, const char *err , co
 void sys_add_error_errnoandsock(const char* sys ,const int syslen, const char *err , const int len , int errnum , SOCKNODE *node);
 void sys_show_error();
 void sys_error_clear();
+void sys_err_init();
 int sys_error_size();
 //添加到本地文件操作
