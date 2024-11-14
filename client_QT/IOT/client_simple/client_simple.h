@@ -18,7 +18,7 @@ public:
         : QThread(parent), timer(this) {
         // 设置定时器每5秒发出信号
         connect(&timer, &QTimer::timeout, this, &SendHeartThread::onTimeout);
-        timer.start(30000);  // 每60000ms（60秒）触发一次timeout信号
+        timer.start(30000);  // 每30秒 触发一次timeout信号
     }
 
 protected:
@@ -111,11 +111,10 @@ signals:
 protected:
     void run() override {
         while (true) {
-            // 在子线程中读取数据
             if (m_sock->connfd->bytesAvailable() > 0) {
                 emit sig_checkReadSignal();  // 发送信号通知父线程
             }
-            QThread::msleep(100);  // 小延时，避免过多占用 CPU
+            QThread::msleep(500);
         }
     }
 

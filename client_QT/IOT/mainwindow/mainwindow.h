@@ -22,6 +22,10 @@ private slots:
     void on_pb_sendCmd_clicked();
     void slots_recvInfoToUpdataUi(char * s , int len );
 
+    void on_pb_cmd1_clicked();
+
+    void on_pb_cmd2_clicked();
+
 private:
     Client_simple *client;
     Ui::MainWindow *ui;
