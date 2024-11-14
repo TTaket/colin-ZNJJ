@@ -30,3 +30,6 @@
 #include <sys/poll.h>
 
 #include <bits/stdc++.h>
+#include <csignal>
+#include <cstdio>
+#include <cstring>

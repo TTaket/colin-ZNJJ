@@ -182,6 +182,16 @@ int main() {
                         sendMsgTwo(nowit->second, retword.c_str(), retword.size());
                         //用户 心跳
                         sysPrint("[%s] hearting", nowit->first.c_str());
+                    }else if(action == "/cmd"){
+                        std::string sysshow = "/cmd "+ message;
+                        printf("%s\n", sysshow.c_str());
+
+                        if (sockmap.find(target) != sockmap.end()) {
+                            sendMsgTwo(sockmap[target], sysshow.c_str(), sysshow.size());
+                        } else {
+                            sysshow = "NO SUCH DEV";
+                            sendMsgTwo(nowit->second, sysshow.c_str(), sysshow.size());
+                        }
                     }else {
                         std::string retword = "Invalid command";
                         sendMsgTwo(nowit->second, retword.c_str(), retword.size());

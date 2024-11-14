@@ -12,7 +12,7 @@ int Client_simple::readMessages() {
     if(len == -1 ){
         return -1;
     }
-    printf("recv from server: %s\n", readbuf);
+    qDebug()<< "recv from server: " + QString(readbuf);
     emit sig_recvInfoToUpdataUi(readbuf , len);
     return len;
 }
@@ -34,7 +34,7 @@ void Client_simple::checkHeart() {
         }
     }
     if (time(0) - lastHeartTime > 90 && lastHeartTime != 0) {
-        printf("server heart check failed\n");
+        qDebug()<< "server heart check failed\n" + QString(readbuf);
         m_isRunning = false;
         return;
     }

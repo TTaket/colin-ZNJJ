@@ -2,13 +2,7 @@
 #include "../header/config.h"
 #include "../pkg/error/myerror.h"
 #include "../pkg/net/socknode.h"
-#include <csignal>
-#include <cstdio>
-#include <cstring>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <pthread.h>
+
 
 
 bool isRunning = true;
