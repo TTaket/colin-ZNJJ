@@ -5,7 +5,6 @@
 #include <cstring>
 #include <iostream>
 
-
 // 读出协议头
 int readHeader(SOCKNODE *node, ProtocolHeader &header) {
     char buf[sizeof(ProtocolHeader)+1] = {};

@@ -98,7 +98,6 @@ int closeSocket(SOCKNODE *node);
  * @param buf 指向需要发送的数据缓冲区。
  * @param len 需要发送的数据长度。
  * @return int 返回字节数
- * @note 阻塞模式和非阻塞模式下均保证数据完整性
  */
 int sendMsg(SOCKNODE *node,const char *buf, int len );
 

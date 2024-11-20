@@ -19,6 +19,7 @@ typedef struct ERRORNODE {
 void sys_add_error(const char* sys , const int syslen, const char *err , const int len);
 void sys_add_error_errno(const char* sys ,const int syslen, const char *err , const int len , int errnum);
 void sys_add_error_errnoandsock(const char* sys ,const int syslen, const char *err , const int len , int errnum , SOCKNODE *node);
+//可以用的行为
 void sys_show_error();
 void sys_error_clear();
 void sys_err_init();
