@@ -83,7 +83,6 @@ typedef struct ProtocolBody {
 
 
 // 命令的具体内容
-// TODO可以加jwt身份验证
 struct CMD_USER_REGISTER_BODY {
     char name[256];
     char pwd[256];

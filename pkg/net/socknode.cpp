@@ -14,7 +14,6 @@ bool setBlock(SOCKNODE *node){
 bool setNoBlock(SOCKNODE *node){
     int flags = fcntl(node->connfd, F_GETFL, 0);
     fcntl(node->connfd, F_SETFL, flags | O_NONBLOCK);
-
     return !isblock(node);
 }
 bool isblock(SOCKNODE *node){
@@ -86,7 +85,7 @@ int recvMsg(SOCKNODE *node, char *buf, int len) {
         {
             ret = recv(node->connfd, buf + recv_bytes, len - recv_bytes, 0);
             if (ret > 0) {
-                recv_bytes += ret;
+                recv_bytes + ret;
                 if (recv_bytes == len){
                     return recv_bytes;
                 }
@@ -106,6 +105,7 @@ int recvMsg(SOCKNODE *node, char *buf, int len) {
         }
     }
 }
+
 int recvMsgWithLen(SOCKNODE *node, char *buf, int len){
     if(len == -1) {
         return -1;
@@ -239,7 +239,6 @@ int ConnSocket(SOCKNODE *node, const char *ip, int port){
     }
     return 0;
 }
-
 //绑定监听
 int bindListen(SOCKNODE *node, int port){
     int opt = 1;
